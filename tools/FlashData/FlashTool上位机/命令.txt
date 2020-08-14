@@ -1,0 +1,1 @@
+.\flashrom.exe -p serprog:dev=\\.\com7:115200 -r ./test2.bin

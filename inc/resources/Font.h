@@ -1,0 +1,8 @@
+#ifndef FONT_H_INCLUDED
+#define FONT_H_INCLUDED
+
+#include <SGUI_Text.h>
+
+SGUI_FONT_RESOURCE_DECLARE(Deng12);
+
+#endif /* FONT_H_INCLUDED */

@@ -1,0 +1,9 @@
+file
+1.splash.bin
+file
+2.normal.bin
+fill
+0x010000
+file
+Deng_U14.bin
+exit

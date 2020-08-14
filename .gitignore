@@ -1,0 +1,7 @@
+bin/*
+obj/*
+*.cscope_file_list
+*.depend
+*.elay
+*.lnk
+*.crf

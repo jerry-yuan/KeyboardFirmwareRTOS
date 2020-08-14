@@ -1,0 +1,55 @@
+﻿static long GetPosWithMbcs(UINT code, UINT codepage)
+{
+	long lIdx = -1;
+	BYTE R = (code >> 8) & 0xFF;   //区码
+	BYTE C = code & 0xFF;   //位码
+										
+	switch(codepage)
+	{
+	case CP932:    // 日文
+		if(R >= 0x81 && R <= 0x9F)
+		{
+			if(C >= 0x40 && C <= 0x7E)
+				lIdx=(R-0x81)*188+(C-0x40);  //188= 0x7E-0x40+1)+(0xFC-0x80+1); 	
+			else if(C >= 0x80 && C <= 0xFC)
+				lIdx = (R-0x81)*188 + (C-0x80)+63;  // 63 = 0x7E-0x40+1;
+		}
+		else if(R >= 0xE0 && R <= 0xFC)
+		{
+			if(C >= 0x40 && C <= 0x7E)
+				lIdx=5828+ (R-0xE0)*188 + (C-0x40);  // 5828 = 188 * (0x9F-0x81+1);
+			else if(C >= 0x80 && C <= 0xFC)
+				lIdx = 5828 + (R-0xE0)*188 + (C-0x80)+63;
+		}
+		break;
+										
+	case CP936:       // 简中
+		if((R >= 0xA1 && R <= 0xFE) && (C >= 0xA1 && C <= 0xFE))
+			lIdx = (R-0xa1)*94 + (C-0xa1);  //94 = (0xFE-0xA1+1); 
+		break;
+										
+	case CP949:       // 韩文
+		if(R >= 0x81)
+		{
+			if(C >= 0x41 && C <= 0x7E)
+				lIdx=((R-0x81)*188+(C-0x41)); //188= (0x7E-0x41+1)+(0xFE-0x81+1);
+			else if(C >= 0x81 && C <= 0xFE)
+				lIdx = ((R-0x81) * 188 + (C - 0x81) + 62);  // 62 = (0x7E-0x41+1);	
+		}
+		break;
+						
+	case CP950:        // 繁中
+		if(R >= 0xA1 && R <= 0xFE) 
+		{
+			if(C >= 0x40 && C <= 0x7E)
+				lIdx=((R-0xa1)*157+(C-0x40)); //157= (0x7E-0x40+1)+(0xFE-0xA1+1);
+			else if(C >= 0xA1 && C <= 0xFE)
+				lIdx = ((R-0xa1)*157+(C-0xa1)+63);  // 63 = (0x7E-0x40+1);
+		}
+		break;
+		
+	default:
+		break;
+	}
+	return lIdx;
+}
