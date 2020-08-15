@@ -10,24 +10,6 @@
 TaskHandle_t hKeyScanTask;
 QueueHandle_t keyUpdateEventQueue;
 
-void displayKeyboardCol(uint8_t col,uint8_t data) {
-    for(int j=0; j<6; j++) {
-        if((data>>j) & 0x01) {
-            OLED_DrawRect(44+col*8,8+j*8,8,8,0x0F,0x0A);
-        } else {
-            OLED_DrawRect(44+col*8,8+j*8,8,8,0x0F,0x00);
-        }
-    }
-
-}
-
-void displayKeyboardPushState() {
-    for(int i=0; i<21; i++) {
-        displayKeyboardCol(i,keyboardPushStatus[i]);
-    }
-
-}
-
 static void keyScanTask(void) {
     uint8_t keyTemp;
     uint8_t* keyboardPushStatus=pvPortMalloc(sizeof(uint8_t)*21);

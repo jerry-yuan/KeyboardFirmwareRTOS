@@ -42,16 +42,9 @@ void OLED_DMADeInitialize();
 void OLED_Clear();
 void OLED_SetPixel(SGUI_INT x,SGUI_INT y,SGUI_COLOR color);
 SGUI_COLOR OLED_GetPixel(SGUI_INT x,SGUI_INT y);
-void OLED_DrawRect(uint8_t x,uint8_t y,uint8_t w,uint8_t h,uint8_t borderColor,uint8_t fillColor);
+void OLED_SyncBuffer();
+void OLED_SetDisplayState(bool display);
 
-void OLED_DispString_GuiToolFont(uint32_t fontAddr,uint8_t x,uint8_t y,uint8_t frColor,uint8_t bgColor,const char* pStr) ;
-void OLED_DispString_Deng12(uint8_t x,uint8_t y,uint8_t frColor,uint8_t bgColor,const char* pStr);
-/*
-void OLED_DispChar_GB2312(uint8_t x,uint8_t y,uint8_t frColor,uint8_t bgColor,uint16_t ch);
-void OLED_DispChar_ASCII(uint8_t x,uint8_t y,uint8_t frColor,uint8_t bgColor,uint8_t ch);
-void OLED_DispString_GBK(uint8_t x,uint8_t y,uint8_t frColor,uint8_t bgColor,const char* pStr);
-void OLED_DispString_UTF8(uint8_t x,uint8_t y,uint8_t frColor,uint8_t bgColor,const char* pStr);
-*/
 extern uint8_t* oledFramebuffer;
 extern SGUI_SCR_DEV* screen;
 #endif /* OLED_H_INCLUDED */
