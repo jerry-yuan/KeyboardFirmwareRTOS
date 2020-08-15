@@ -11,10 +11,15 @@
 #include <usb/hw_config.h>
 #include <usb_lib.h>
 
+#define ACTION_MASK_TURNONSCR   0x80
+#define ACTION_MASK_RESET_TIM   0x40
+#define ACTION_MASK_DISABLE_TIM 0x20
+
 enum KeyboardScreenAction {
-    NoAction = 0x00,
-    GoMenu   = 0x01,
-    RedrawState
+    NoAction        = 0x00,
+    TurnOnScreen    = 0xC0,
+    GoMenu          = 0xA0,
+    RedrawState     = 0xC1
 };
 
 static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF);
@@ -56,6 +61,7 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
+    TIM_ScreenSaverReset();
     W25X_Read_Data(oledFramebuffer,FLASH_ADDR_RUNBG,OLED_FRAMEBUFFER_SIZE);
     Refresh(pstDeviceIF,NULL);
     return HMI_RET_NORMAL;
@@ -70,11 +76,15 @@ static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParam
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
-    *piActionID = HMI_SCREEN_ID_ANY;
+    *piActionID = NoAction;
     if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)) {
         stateMachine->transferHandler[stateMachine->currentState]((KEY_EVENT*)pstEvent,piActionID);
     } else if(pstEvent->iID == KEYBOARD_STATE_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEYBOARD_STATE_EVENT)) {
         *piActionID = RedrawState;
+    } else if(pstEvent->iID == RTC_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,RTC_EVENT)){
+        // do nothing
+    }else{
+        *piActionID = TurnOnScreen;
     }
     return HMI_RET_NORMAL;
 }
@@ -84,6 +94,19 @@ static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESU
     } else if(iActionID==GoMenu) {
         HMI_SwitchScreen(MenuScreen_ID,NULL);
     }
+    if(iActionID & ACTION_MASK_TURNONSCR){
+        OLED_SetDisplayState(true);
+    }
+    if(iActionID & ACTION_MASK_RESET_TIM){
+        printf("0x%02x RESET Timer!\r\n",iActionID);
+        TIM_ScreenSaverReset();
+    }
+    if(iActionID & ACTION_MASK_DISABLE_TIM){
+        printf("0x%02x DISABLE Timer!\r\n",iActionID);
+        TIM_Cmd(TIM2,DISABLE);
+        TIM_SetCounter(TIM2,0);
+    }
+
     return HMI_RET_NORMAL;
 }
 
@@ -166,7 +189,12 @@ void consumerKeyboardStandbyTransferHandler (KEY_EVENT* event,SGUI_INT* piAction
     MappedKeyCodes_t* released  = &event->Data.stRelease;
     if(released->length>0 && (released->keyCodes[0]&KEY_Fn_BIT_MASK)) {
         stateMachine->currentState=StandardKeyboardWorking;
-        *piActionId = GoMenu;
+        if(TIM_GetCounter(TIM2)>0){
+            *piActionId = GoMenu;
+        }else{
+            *piActionId = TurnOnScreen;
+        }
+
     } else {
         stateMachine->currentState=ConsumerKeyboardWorking;
         consumerKeyboardWorkingTransferHandler(event,piActionId);

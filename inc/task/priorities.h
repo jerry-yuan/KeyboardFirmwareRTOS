@@ -6,7 +6,7 @@
 #define TASK_KEYBOARD_PRIORITY          3
 #define TASK_KEYBOARD_STATE_PRIORITY    3
 #define TASK_USB_MESSAGE_PRIORITY       3
-#define TASK_MENU_PRIORITY              2
 #define TASK_GUI_PRIORITY               2
+#define TASK_RTC_PRIORITY               3
 
 #endif /* PRIORITIES_H_INCLUDED */

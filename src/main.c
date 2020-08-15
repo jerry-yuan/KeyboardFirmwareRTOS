@@ -20,6 +20,8 @@ static void bootstrap(void) {
     guiTaskInitialize();
     keyboardTaskInitialize();
 
+    RTCTaskInitialize();
+
     vTaskDelete(hBootstrap);
     taskEXIT_CRITICAL();
 }

@@ -1,5 +1,6 @@
 #ifndef CONSTS_H_INCLUDED
 #define CONSTS_H_INCLUDED
+
 #include <HMI_Engine.h>
 enum ScreenId {
     InitScreen_ID  = 1,
@@ -12,7 +13,8 @@ enum ScreenId {
 enum EventId {
     USB_STATE_EVENT_ID    = 1,
     KEY_EVENT_ID,
-    KEYBOARD_STATE_EVENT_ID
+    KEYBOARD_STATE_EVENT_ID,
+    RTC_EVENT_ID
 };
 
 // Events
@@ -36,5 +38,6 @@ typedef struct {
 HMI_EVENT_TYPE_DECLARE(KEY_EVENT,KEY_EVENT_DATA)
 
 HMI_EVENT_TYPE_DECLARE(KEYBOARD_STATE_EVENT,uint32_t)
+HMI_EVENT_TYPE_DECLARE(RTC_EVENT,uint8_t)
 
 #endif /* CONSTS_H_INCLUDED */

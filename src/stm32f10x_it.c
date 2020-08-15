@@ -26,11 +26,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x_it.h"
 
-
 #include <bsp/oled.h>
 
 #include "FreeRTOS.h"					//FreeRTOS使用
 #include "task.h"
+
+#include <task/rtc.h>
 
 /** @addtogroup STM32F10x_StdPeriph_Template
   * @{
@@ -128,11 +129,11 @@ void DebugMon_Handler(void) {
 //{
 //}
 
-///**
-//  * @brief  This function handles SysTick Handler.
-//  * @param  None
-//  * @retval None
-//  */
+/**
+ * @brief  This function handles SysTick Handler.
+ * @param  None
+ * @retval None
+ */
 extern void xPortSysTickHandler(void);
 //systick中断服务函数
 void SysTick_Handler(void) {
@@ -152,6 +153,27 @@ void SysTick_Handler(void) {
 /*  file (startup_stm32f10x_xx.s).                                            */
 /******************************************************************************/
 
+void RTC_IRQHandler(void){
+    BaseType_t xReturn = pdPASS;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    if(RTC_GetITStatus(RTC_IT_SEC) != RESET){
+        RTC_ClearITPendingBit(RTC_IT_SEC);
+        xReturn=xEventGroupSetBitsFromISR(hRTCEvent,RTC_EVENT_BIT,&xHigherPriorityTaskWoken);
+        if(xReturn == pdFAIL){
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        }
+    }
+
+}
+void TIM2_IRQHandler(void){
+    if (TIM_GetITStatus( TIM2, TIM_IT_Update) != RESET) {
+        TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
+        TIM_Cmd(TIM2,DISABLE);
+        TIM_SetCounter(TIM2,0);
+        OLED_SetDisplayState(false);
+        printf("TIM2 Triggered!\r\n");
+    }
+}
 /**
   * @brief  This function handles PPP interrupt request.
   * @param  None

@@ -129,7 +129,9 @@
 		<Unit filename="inc\bsp\flashMap.h" />
 		<Unit filename="inc\bsp\keyboard.h" />
 		<Unit filename="inc\bsp\oled.h" />
+		<Unit filename="inc\bsp\rtc.h" />
 		<Unit filename="inc\bsp\statled.h" />
+		<Unit filename="inc\bsp\tim.h" />
 		<Unit filename="inc\bsp\usart.h" />
 		<Unit filename="inc\bsp\W25Q64.h" />
 		<Unit filename="inc\delay.h" />
@@ -150,6 +152,7 @@
 		<Unit filename="inc\task\keyboard.h" />
 		<Unit filename="inc\task\keyscan.h" />
 		<Unit filename="inc\task\priorities.h" />
+		<Unit filename="inc\task\rtc.h" />
 		<Unit filename="inc\task\usbdevicestate.h" />
 		<Unit filename="inc\USB\hw_config.h" />
 		<Unit filename="inc\USB\platform_config.h" />
@@ -260,7 +263,13 @@
 		<Unit filename="src\bsp\oled.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src\bsp\rtc.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src\bsp\statled.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\bsp\tim.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\bsp\usart.c">
@@ -312,6 +321,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\task\keyscan.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\task\rtc.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\task\usbdevicestate.c">

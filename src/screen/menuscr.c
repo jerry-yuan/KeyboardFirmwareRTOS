@@ -59,8 +59,8 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
 
     menuRect.iX=0;
     menuRect.iY=0;
-    menuRect.iWidth=250;
-    menuRect.iHeight=60;
+    menuRect.iWidth=256;
+    menuRect.iHeight=64;
 
     SGUI_Menu_Initialize(menuObject,SGUI_FONT_REF(Deng12),&menuRect,menuItems,5);
     return HMI_RET_NORMAL;
