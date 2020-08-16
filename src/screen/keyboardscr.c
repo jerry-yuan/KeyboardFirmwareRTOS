@@ -5,6 +5,7 @@
 
 #include <bsp/oled.h>
 #include <bsp/W25Q64.h>
+#include <bsp/tim.h>
 
 #include <task/keyboard.h>
 

@@ -7,6 +7,7 @@
 #include <task/keyscan.h>
 #include <task/keyboard.h>
 #include <task/gui.h>
+#include <task/rtc.h>
 #include <stdlib.h>
 
 static TaskHandle_t hBootstrap;
