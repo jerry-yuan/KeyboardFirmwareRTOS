@@ -29,9 +29,17 @@ void TIM_Initialize(){
     TIM_ITConfig(TIM2,TIM_IT_Update,ENABLE);
 }
 
-void TIM_ScreenSaverReset(){
+void TIM_ScreenSaver_Reset(){
     TIM_Cmd(TIM2,DISABLE);
     TIM_SetCounter(TIM2,TIM_SCREEN_SAVER_COUNTER_RESET-1);
     TIM_Cmd(TIM2,ENABLE);
 }
 
+void TIM_ScreenSaver_Disable(){
+    TIM_Cmd(TIM2,DISABLE);
+    TIM_SetCounter(TIM2,0);
+}
+
+bool TIM_ScreenSaver_IsEnabled(){
+    return (TIM2->CR1 & TIM_CR1_CEN)?true:false;
+}

@@ -45,26 +45,10 @@ static void clearList(KeyUpdateInfo_t* head) {
         vPortFree(temp);
     }
 }
-static void dumpEvent(KeyUpdateEvent_t* event) {
-    KeyUpdateInfo_t* pCurrent;
-    printf("========dumpEvent========\r\n");
-    printf("%d keys pressed,%d keys released\r\n",event->pressedCount,event->releaseCount);
-    pCurrent=event->pressed;
-    while(pCurrent!=NULL) {
-        printf("Key (%02d,%02d) Pressed!\r\n",pCurrent->column,pCurrent->row);
-        pCurrent=pCurrent->next;
-    }
-    pCurrent=event->release;
-    while(pCurrent!=NULL) {
-        printf("Key (%02d,%02d) Released!\r\n",pCurrent->column,pCurrent->row);
-        pCurrent=pCurrent->next;
-    }
 
-}
 static void mapKeyCodes(KeyUpdateInfo_t* pCurrent,uint32_t* pKeyCode) {
     uint32_t* pFirstKeyCode=pKeyCode;
     while(pCurrent!=NULL) {
-        printf("mapping (%d,%d)\r\n",pCurrent->row,pCurrent->column);
         *pKeyCode=keyboardMap[pCurrent->row][pCurrent->column];
         if((*pKeyCode & KEY_Fn_BIT_MASK )&& (pKeyCode!=pFirstKeyCode)) {
             *pKeyCode       = *pKeyCode ^ *pFirstKeyCode;
@@ -139,7 +123,6 @@ void keyboardTaskInitialize() {
     BaseType_t xReturn = pdPASS;
 
     hKeyboardStateUpdateEvent=xEventGroupCreate();
-//    hKeyEventRerouteQueue=xQueueCreate(128,sizeof(MappedKeyCodes_t));
     xReturn = xTaskCreate((TaskFunction_t)keyboardTask,"keyboard",128,NULL,TASK_KEYBOARD_PRIORITY,&hKeyboardTask);
     if(xReturn == pdPASS) {
         printf("keyboard task create success!\r\n");

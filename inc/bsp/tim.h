@@ -2,6 +2,7 @@
 #define TIM_H_INCLUDED
 
 #include <stm32f10x.h>
+#include <stdbool.h>
 
 #define TIM_SCREEN_SAVER_PRESCALER      36000
 #define TIM_SCREEN_SAVER_PERIOD         10
@@ -9,6 +10,8 @@
 
 void TIM_Initialize();
 
-void TIM_ScreenSaverReset();
+void TIM_ScreenSaver_Reset();
+void TIM_ScreenSaver_Disable();
+bool TIM_ScreenSaver_IsEnabled();
 
 #endif /* TIM_H_INCLUDED */

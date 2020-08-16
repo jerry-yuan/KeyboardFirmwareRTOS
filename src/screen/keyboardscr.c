@@ -62,7 +62,7 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
-    TIM_ScreenSaverReset();
+    TIM_ScreenSaver_Reset();
     W25X_Read_Data(oledFramebuffer,FLASH_ADDR_RUNBG,OLED_FRAMEBUFFER_SIZE);
     Refresh(pstDeviceIF,NULL);
     return HMI_RET_NORMAL;
@@ -99,13 +99,10 @@ static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESU
         OLED_SetDisplayState(true);
     }
     if(iActionID & ACTION_MASK_RESET_TIM){
-        printf("0x%02x RESET Timer!\r\n",iActionID);
-        TIM_ScreenSaverReset();
+        TIM_ScreenSaver_Reset();
     }
     if(iActionID & ACTION_MASK_DISABLE_TIM){
-        printf("0x%02x DISABLE Timer!\r\n",iActionID);
-        TIM_Cmd(TIM2,DISABLE);
-        TIM_SetCounter(TIM2,0);
+        TIM_ScreenSaver_Disable();
     }
 
     return HMI_RET_NORMAL;
@@ -190,7 +187,7 @@ void consumerKeyboardStandbyTransferHandler (KEY_EVENT* event,SGUI_INT* piAction
     MappedKeyCodes_t* released  = &event->Data.stRelease;
     if(released->length>0 && (released->keyCodes[0]&KEY_Fn_BIT_MASK)) {
         stateMachine->currentState=StandardKeyboardWorking;
-        if(TIM_GetCounter(TIM2)>0){
+        if(TIM_ScreenSaver_IsEnabled()>0){
             *piActionId = GoMenu;
         }else{
             *piActionId = TurnOnScreen;
