@@ -1,7 +1,7 @@
 #include <task/bglight.h>
 #include <task/priorities.h>
 
-#include <bsp/led.h>
+#include <bsp/bglight.h>
 
 TaskHandle_t hBgLightTask;
 
