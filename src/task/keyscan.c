@@ -24,7 +24,7 @@ static void keyScanTask(void) {
         for(uint8_t colIndex=0; colIndex<21; colIndex++) {
             keyTemp=KEY_Read();
             while(keyTemp!=KEY_Read()) {
-                Delay_ms(10);
+                vTaskDelay(10/portTICK_PERIOD_MS);
                 keyTemp=KEY_Read();
             }
             if(keyboardPushStatus[colIndex]!=keyTemp) {
