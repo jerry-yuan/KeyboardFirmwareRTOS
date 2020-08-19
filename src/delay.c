@@ -20,13 +20,13 @@ extern uint32_t SystemCoreClock;
 
 void Delay_TimerInitialize(void) {
     //SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
-    /* 使能DWT外设 */
+    // 使能DWT外设
     DEM_CR |= (uint32_t)DEM_CR_TRCENA;
 
-    /* DWT CYCCNT寄存器计数清0 */
+    // DWT CYCCNT寄存器计数清0
     //DWT_CYCCNT = (uint32_t)0u;
 
-    /* 使能Cortex-M DWT CYCCNT寄存器 */
+    // 使能Cortex-M DWT CYCCNT寄存器
     DWT_CR |= (uint32_t)DWT_CR_CYCCNTENA;
 }
 static void Delay(__IO uint32_t value,uint32_t timeUnit){

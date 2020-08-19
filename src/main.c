@@ -8,6 +8,7 @@
 #include <task/keyboard.h>
 #include <task/gui.h>
 #include <task/rtc.h>
+#include <task/bglight.h>
 #include <stdlib.h>
 
 static TaskHandle_t hBootstrap;
@@ -19,6 +20,7 @@ static void bootstrap(void) {
     USBDeviceStateTaskInitialize();
     keyScanTaskInitialize();
     guiTaskInitialize();
+    BgLightTaskTaskInitialize();
     keyboardTaskInitialize();
 
     RTCTaskInitialize();

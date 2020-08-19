@@ -125,6 +125,7 @@
 		<Unit filename="FreeRTOS\timers.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="inc\bsp\bglight.h" />
 		<Unit filename="inc\bsp\bsp.h" />
 		<Unit filename="inc\bsp\flashMap.h" />
 		<Unit filename="inc\bsp\keyboard.h" />
@@ -148,6 +149,7 @@
 		<Unit filename="inc\stm32f10x_conf.h" />
 		<Unit filename="inc\stm32f10x_it.h" />
 		<Unit filename="inc\system_stm32f10x.h" />
+		<Unit filename="inc\task\bglight.h" />
 		<Unit filename="inc\task\gui.h" />
 		<Unit filename="inc\task\keyboard.h" />
 		<Unit filename="inc\task\keyscan.h" />
@@ -254,6 +256,9 @@
 		<Unit filename="SPL\src\stm32f10x_wwdg.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src\bsp\bglight.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src\bsp\bsp.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -312,6 +317,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\system_stm32f10x.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\task\bglight.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\task\gui.c">

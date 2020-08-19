@@ -164,7 +164,7 @@ void standardKeyboardTransferHandler(KEY_EVENT* event,SGUI_INT* piActionId) {
     MappedKeyCodes_t* pressed   = &event->Data.stPress;
     MappedKeyCodes_t* released  = &event->Data.stRelease;
     if(pressed->length>0 && pressed->keyCodes[0] & KEY_Fn_BIT_MASK) {
-        // 发现是Fn键,暂时忽略 TODO
+        // 发现是Fn键
         stateMachine->currentState=ConsumerKeyboardStandby;
         if(pressed->length>1) {
             pressed->cursor++;

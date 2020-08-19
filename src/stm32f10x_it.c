@@ -171,7 +171,6 @@ void TIM2_IRQHandler(void){
         TIM_Cmd(TIM2,DISABLE);
         TIM_SetCounter(TIM2,0);
         OLED_SetDisplayState(false);
-        printf("TIM2 Triggered!\r\n");
     }
 }
 /**
