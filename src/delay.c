@@ -1,5 +1,7 @@
 #include <delay.h>
 
+#if defined(DELAY_USING_DWT)
+
 /**
  * 使用DWT实现的高精度延时函数
  */
@@ -43,8 +45,15 @@ void Delay_us(__IO uint32_t us) {
 void Delay_ms(__IO uint32_t ms) {
     Delay(ms,TIMEUNIT_MS);
 }
-//由于Systick被占用,以下函数报废
-/*
+#elif defined(DELAY_USING_SYSTICK)
+/**
+ * 使用Systick实现的高精度延时函数
+ * FreeRTOS中无法使用
+ */
+
+void Delay_TimerInitialize(void){
+}
+
 void Delay_us(uint32_t us) {
     SysTick->LOAD=us*9;
     SysTick->VAL=0x00;
@@ -58,4 +67,25 @@ void Delay_ms(__IO uint32_t ms) {
     SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
     while(SysTick->CTRL>>16 !=1 );
     SysTick->CTRL |=SysTick_CTRL_ENABLE_Pos;
-}*/
+}
+#elif defined(DELAY_USING_TIM6)
+void Delay_TimerInitialize(void){
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, ENABLE); //使能TIM6时钟
+}
+void Delay_ms(__IO uint32_t ms){
+    TIM_PrescalerConfig(TIM6,72 - 1 ,TIM_PSCReloadMode_Immediate);
+    TIM_SetAutoreload(TIM6,ms);
+    TIM_ClearFlag(TIM6,TIM_FLAG_Update);
+    TIM_Cmd(TIM6,ENABLE);
+    while(TIM_GetFlagStatus(TIM6,TIM_FLAG_Update) != RESET);
+    TIM_Cmd(TIM6,DISABLE);
+}
+void Delay_us(__IO uint32_t ms){
+    TIM_PrescalerConfig(TIM6,36000 - 1,TIM_PSCReloadMode_Immediate);
+    TIM_SetAutoreload(TIM6,ms*2);
+    TIM_ClearFlag(TIM6,TIM_FLAG_Update);
+    TIM_Cmd(TIM6,ENABLE);
+    while(TIM_GetFlagStatus(TIM6,TIM_FLAG_Update) != RESET);
+    TIM_Cmd(TIM6,DISABLE);
+}
+#endif

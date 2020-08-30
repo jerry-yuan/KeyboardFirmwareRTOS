@@ -17,7 +17,7 @@ void RTCTaskInitialize() {
 
     xReturn = xTaskCreate((TaskFunction_t)RTCTask,"rtcTask",128,NULL,TASK_RTC_PRIORITY,&hRTCTask);
     if(xReturn == pdPASS) {
-        printf("create rtcTask success!\r\n");
+        printf("Create rtcTask success!\r\n");
     }
     // 使能RTC秒中断
     RTC_ITConfig(RTC_IT_SEC, ENABLE);

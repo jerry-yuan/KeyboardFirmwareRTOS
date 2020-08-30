@@ -7,7 +7,9 @@ HMI_SCREEN_OBJECT* screens[] = {
     &SCREEN_Init,
     &SCREEN_USB,
     &SCREEN_Keyboard,
-    &SCREEN_Menu
+    &SCREEN_Menu,
+    &SCREEN_Clock_Show,
+    &SCREEN_Clock_Edit
 };
 
 void hmiEngineInitialize() {

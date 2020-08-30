@@ -8,6 +8,9 @@
 #include <screen/keyboardscr.h>
 #include <screen/menuscr.h>
 
+#include <screen/clock/show.h>
+#include <screen/clock/edit.h>
+
 void hmiEngineInitialize();
 
 extern HMI_ENGINE_OBJECT* hmiEngine;

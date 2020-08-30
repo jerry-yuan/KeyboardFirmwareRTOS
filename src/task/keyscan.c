@@ -58,10 +58,10 @@ static void keyScanTask(void) {
             KEY_NextColumn();
         }
         // 扫描完一遍,如果有按键事件则提交按键事件队列
-        if((keyUpdateEvent.pressed !=NULL) || (keyUpdateEvent.release!=NULL)){
+        if((NULL!=keyUpdateEvent.pressed) || (NULL!=keyUpdateEvent.release)){
             xQueueSend(keyUpdateEventQueue,&keyUpdateEvent,0);
         }
-        vTaskDelay(10);
+        vTaskDelay(10/portTICK_PERIOD_MS);
     }
 }
 void keyScanTaskInitialize() {
@@ -69,6 +69,6 @@ void keyScanTaskInitialize() {
     keyUpdateEventQueue=xQueueCreate(64,sizeof(KeyUpdateEvent_t));
     xReturn=xTaskCreate((TaskFunction_t)keyScanTask,"keyScan",64,NULL,TASK_KEYSCAN_PRIORITY,&hKeyScanTask);
     if(xReturn==pdPASS) {
-        printf("create keyScan task success!\r\n");
+        printf("Create keyScan task success!\r\n");
     }
 }

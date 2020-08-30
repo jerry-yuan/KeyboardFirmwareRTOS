@@ -48,9 +48,11 @@ static void clearList(KeyUpdateInfo_t* head) {
 
 static void mapKeyCodes(KeyUpdateInfo_t* pCurrent,uint32_t* pKeyCode) {
     uint32_t* pFirstKeyCode=pKeyCode;
-    while(pCurrent!=NULL) {
+    printf("mapping code:");
+    while(NULL != pCurrent) {
+        printf("(%d,%d) ",pCurrent->row,pCurrent->column);
         *pKeyCode=keyboardMap[pCurrent->row][pCurrent->column];
-        if((*pKeyCode & KEY_Fn_BIT_MASK )&& (pKeyCode!=pFirstKeyCode)) {
+        if((*pKeyCode & KEY_Fn_BIT_MASK ) && (pKeyCode!=pFirstKeyCode)) {
             *pKeyCode       = *pKeyCode ^ *pFirstKeyCode;
             *pFirstKeyCode  = *pKeyCode ^ *pFirstKeyCode;
             *pKeyCode       = *pKeyCode ^ *pFirstKeyCode;
@@ -58,9 +60,10 @@ static void mapKeyCodes(KeyUpdateInfo_t* pCurrent,uint32_t* pKeyCode) {
         pKeyCode++;
         pCurrent=pCurrent->next;
     }
+    printf("\r\n");
 }
 
-static void keyboardTask(void) {
+void keyboardTask(void) {
     BaseType_t xReturn=pdPASS;
 
     KeyUpdateEvent_t keyUpdateEvent;
@@ -125,10 +128,10 @@ void keyboardTaskInitialize() {
     hKeyboardStateUpdateEvent=xEventGroupCreate();
     xReturn = xTaskCreate((TaskFunction_t)keyboardTask,"keyboard",128,NULL,TASK_KEYBOARD_PRIORITY,&hKeyboardTask);
     if(xReturn == pdPASS) {
-        printf("keyboard task create success!\r\n");
+        printf("Create keyboard task success!\r\n");
     }
     xReturn = xTaskCreate((TaskFunction_t)keyboardStatusTask,"keyboard-state",128,NULL,TASK_KEYBOARD_STATE_PRIORITY,&hKeyboardStatTask);
     if(xReturn == pdPASS) {
-        printf("keyboard stat task create success!\r\n");
+        printf("Create keyboard stat task success!\r\n");
     }
 }

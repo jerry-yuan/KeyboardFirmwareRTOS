@@ -12,7 +12,7 @@ void BgLightTaskTaskInitialize(){
 
     xReturn = xTaskCreate((TaskFunction_t)BgLightTask,"bgLightTask",64,NULL,TASK_BGLIGHT_PRIORITY,&hBgLightTask);
     if(xReturn == pdPASS){
-        printf("create bgLightTask success!\r\n");
+        printf("Create bgLightTask success!\r\n");
     }
 }
 
@@ -21,8 +21,8 @@ void BgLightTask(void* parameters){
     //LED_PrepareRowData(0xFF);
     while(1){
         LED_PrepareRowData(0xFF);
-        LED_SetColData(~(0x555555<<col));
-        col=(col+1)%2;
+        LED_SetColData(~(0x111111<<col));
+        col=(col+1)%4;
         vTaskDelay(1);
     }
 }

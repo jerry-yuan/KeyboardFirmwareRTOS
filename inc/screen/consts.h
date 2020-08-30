@@ -3,11 +3,12 @@
 
 #include <HMI_Engine.h>
 enum ScreenId {
-    InitScreen_ID  = 1,
-    USBScreen_ID,
-    KeyboardScreen_ID,
-    MenuScreen_ID,
-    SleepScreen_ID
+    SCREEN_Init_ID  = 1,
+    SCREEN_USB_State_ID,
+    SCREEN_Keyboard_State_ID,
+    SCREEN_Menu_ID,
+    SCREEN_Clock_Show_ID,
+    SCREEN_Clock_Edit_ID
 };
 
 enum EventId {

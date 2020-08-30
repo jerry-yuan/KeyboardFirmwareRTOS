@@ -10,7 +10,7 @@
 #include <task/rtc.h>
 #include <task/bglight.h>
 #include <stdlib.h>
-
+#include <math.h>
 static TaskHandle_t hBootstrap;
 
 static void bootstrap(void) {

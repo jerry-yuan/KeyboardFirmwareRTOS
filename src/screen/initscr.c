@@ -19,7 +19,7 @@ static HMI_SCREEN_ACTION screenActions={
     PostProcess
 };
 
-HMI_SCREEN_OBJECT SCREEN_Init={InitScreen_ID,&screenActions};
+HMI_SCREEN_OBJECT SCREEN_Init={SCREEN_Init_ID,&screenActions};
 
 HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF){
     return HMI_RET_NORMAL;
@@ -32,7 +32,7 @@ HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID){
-    HMI_SwitchScreen(USBScreen_ID,NULL);
+    HMI_SwitchScreen(SCREEN_USB_State_ID,NULL);
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID){
