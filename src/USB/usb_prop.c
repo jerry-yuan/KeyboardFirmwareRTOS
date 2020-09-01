@@ -189,6 +189,19 @@ void JKBD_Reset(void) {
     SetEPRxCount(ENDP2, 1);
     SetEPRxStatus(ENDP2,EP_RX_VALID);
 
+	/* Initialize Endpoint 3 */
+	SetEPType(ENDP3,EP_BULK);
+
+	/* Initialize Endpoint IN 3 */
+	SetEPTxAddr(ENDP3,ENDP3_TXADDR);
+	SetEPTxCount(ENDP3,64);
+	SetEPTxStatus(ENDP3,EP_TX_NAK);
+
+	/* Initialize Endpoint OUT 3 */
+	SetEPRxAddr(ENDP3,ENDP3_RXADDR);
+	SetEPRxCount(ENDP3,64);
+	SetEPRxStatus(ENDP3,EP_RX_VALID);
+
     /* Set this device to response on default address */
     SetDeviceAddress(0);
     bDeviceState = ATTACHED;
@@ -256,11 +269,13 @@ RESULT JKBD_Data_Setup(uint8_t RequestNo) {
     											2:端点(ENDPOINT_RECIPIENT)
     0000 0000*/
     CopyRoutine = NULL;
-
+	printf("RequestNo = 0x%02x\r\n",RequestNo);
     if(RequestNo == GET_DESCRIPTOR) {
         // 主机希望GET_DESCRIPTOR
+        printf("Type_Recipient= 0x%02x\r\n",Type_Recipient);
         if(Type_Recipient == (STANDARD_REQUEST | INTERFACE_RECIPIENT)) {
             // 标准请求 => 接口
+            printf("pInformation->USBwValue1=0x%04x\r\n",pInformation->USBwValue1);
             if(pInformation->USBwValue1 == REPORT_DESCRIPTOR) {
                 // 主机 要 报告描述符
                 switch(pInformation->USBwIndex0) {
@@ -271,6 +286,7 @@ RESULT JKBD_Data_Setup(uint8_t RequestNo) {
                     CopyRoutine=JKBD_GetExtKbdReportDescriptor;
                     break;
                 default:
+                	NOP_Process();
                     break;
                 }
             } else if(pInformation->USBwValue1==HID_DESCRIPTOR_TYPE) {
@@ -285,6 +301,8 @@ RESULT JKBD_Data_Setup(uint8_t RequestNo) {
                 default:
                     break;
                 }
+            }else{
+				printf("pInformation->USBwValue1=0x%04x\r\n",pInformation->USBwValue1);
             }
         }
     } else if(RequestNo==GET_PROTOCOL) {
@@ -292,6 +310,11 @@ RESULT JKBD_Data_Setup(uint8_t RequestNo) {
         if(Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT)) {
             CopyRoutine = JKBD_GetProtocolValue;
         }
+    } else if(RequestNo==GET_MAX_LUN){
+		// 系统GET_MAX_LUN
+		if(Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT)) {
+			CopyRoutine = JKBD_GetMaxLun;
+		}
     }
 
 
@@ -446,6 +469,15 @@ uint8_t *JKBD_GetProtocolValue(uint16_t Length) {
     } else {
         return (uint8_t *)(&ProtocolValue);
     }
+}
+uint32_t Max_Lun =0;
+uint8_t *JKBD_GetMaxLun(uint16_t Length){
+	if(Length == 0) {
+		pInformation->Ctrl_Info.Usb_wLength = 1;
+		return NULL;
+	}else{
+		return ((uint8_t*)(&Max_Lun));
+	}
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

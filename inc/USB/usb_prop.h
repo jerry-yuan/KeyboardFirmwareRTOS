@@ -69,6 +69,7 @@ uint8_t *JKBD_GetStdKbdReportDescriptor(uint16_t Length);
 uint8_t *JKBD_GetExtKbdReportDescriptor(uint16_t Length);
 uint8_t *JKBD_GetStdKbdHIDDescriptor(uint16_t Length);
 uint8_t *JKBD_GetExtKbdHIDDescriptor(uint16_t Length);
+uint8_t *JKBD_GetMaxLun(uint16_t Length);
 
 /* Exported define -----------------------------------------------------------*/
 #define JKBD_GetConfiguration          NOP_Process
@@ -82,6 +83,10 @@ uint8_t *JKBD_GetExtKbdHIDDescriptor(uint16_t Length);
 //#define JKBD_SetDeviceAddress          NOP_Process
 
 #define REPORT_DESCRIPTOR                  0x22
+/* MASS Storage Requests*/
+#define GET_MAX_LUN                0xFE
+#define MASS_STORAGE_RESET         0xFF
+#define LUN_DATA_LENGTH            1
 
 #ifdef __cplusplus
 }

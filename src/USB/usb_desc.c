@@ -141,7 +141,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     0x01,								// bNumDescriptors		下级描述符数量		1个
     0x22,								// bDescriptorType		下级描述符类型		HID报告描述符(0x22)
     JKBD_SIZ_EXTKBD_REPORT_DESC,0x00,	// wItemLength			HID报告描述符长度	JKBD_SIZ_EXTKBD_REPORT_DESC
-    /** 接口1:端点1:主机输入用于键盘按键采集(IN) **/
+    /** 接口1:端点2:主机输入用于键盘按键采集(IN) **/
     /* 59 */
     0x07,								// bLength			描述符长度		7字节
     USB_ENDPOINT_DESCRIPTOR_TYPE,		// bDescriptorType	描述符类型		端点描述符
@@ -153,7 +153,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     0x03,								// bmAttributes		端点属性		中断传输11b(00:控制 01:同步 10:批量 11:中断)
     0x08,0x00,							// wMaxPacketSize	最大传输包大小	8字节
     0x0A,								// bInterval			传输时间间隔为	32 ms(单位毫秒)
-    /** 接口1:端点1:主机输出用于键盘状态输出(OUT) **/
+    /** 接口1:端点2:主机输出用于键盘状态输出(OUT) **/
     /* 66 */
     0x07,								// bLength			描述符长度		7字节
     USB_ENDPOINT_DESCRIPTOR_TYPE,		// bDescriptorType	描述符类型		端点描述符
@@ -161,7 +161,37 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     0x03,								// bmAttributes		端点属性		中断传输
     0x08,0x00,							// wMaxPacketSize	端点最大传输包	8字节
     0x0A,								// bInterval		数据传输间隔	32ms(单位毫秒)
+
+    /** 接口2:大容量存储 **/
     /* 73 */
+    0x09,								// bLength				描述符长度			9字节
+    USB_INTERFACE_DESCRIPTOR_TYPE,		// bDescriptorType		描述符类型			接口描述符
+    0x02,								// bInterfaceNumber		接口编号			0x01
+    0x00,								// bAlternateSetting	接口可替换设置号	0x00
+    0x02,								// bNumEndpoints		使用的端点数量		2
+    0x08,								// bInterfaceClass		接口实现的USB类		MSD(Massive Storage Device)
+    0x06,								// bInterfaceSubClass	USB子类 			SCSI Transparent command set
+    0x50,								// nInterfaceProtocol	接口协议			USB Mass Storage Class Bulk-Only(BBB) Transport
+    0,									// iInterface			描述该接口的字符串	第0个
+    /** 接口2:端点3: (IN) **/
+    /* 82 */
+    0x07,								// bLength				描述符长度			7字节
+    USB_INTERFACE_DESCRIPTOR_TYPE,		// bDescriptorType		描述符类型			端点描述符
+    0x83,								// bEndpointAddress		端点地址			3(IN)
+	0x02,								// bmAttributes			端点属性			Bulk传输
+	0x40,0x00,							// wMaxPacketSize		端点最大传输包		64字节
+	0x00,								// bInterval			数据传输间隔		0ms
+	/** 接口2:端点4: (OUT) **/
+	/* 89 */
+	0x07,								// bLength				描述符长度			7字节
+    USB_INTERFACE_DESCRIPTOR_TYPE,		// bDescriptorType		描述符类型			端点描述符
+    0x03,								// bEndpointAddress		端点地址			3(OUT)
+	0x02,								// bmAttributes			端点属性			Bulk传输
+	0x40,0x00,							// wMaxPacketSize		端点最大传输包		64字节
+	0x00,								// bInterval			数据传输间隔		0ms
+
+	/* 96 */
+
 };
 /* 标准键盘 HID 报告描述符 */
 const uint8_t JKBD_StdKbdReportDescriptor[JKBD_SIZ_STDKBD_REPORT_DESC] = {

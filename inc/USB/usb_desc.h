@@ -46,13 +46,14 @@
 #define USB_ENDPOINT_DESCRIPTOR_TYPE            0x05
 
 #define HID_DESCRIPTOR_TYPE                     0x21
+
 #define JKBD_SIZ_STDKBD_HID_DESC                0x09
 #define JKBD_OFF_STDKBD_HID_DESC                0x12
 #define JKBD_SIZ_EXTKBD_HID_DESC                0x09
 #define JKBD_OFF_EXTKBD_HID_DESC                0x28
 
 #define JKBD_SIZ_DEVICE_DESC                18
-#define JKBD_SIZ_CONFIG_DESC                73
+#define JKBD_SIZ_CONFIG_DESC                96
 #define JKBD_SIZ_STDKBD_REPORT_DESC         60
 #define JKBD_SIZ_EXTKBD_REPORT_DESC			42
 #define JKBD_SIZ_STRING_LANGID              4

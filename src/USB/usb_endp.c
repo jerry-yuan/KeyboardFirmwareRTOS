@@ -47,5 +47,13 @@ void EP2_IN_Callback(void) {
 void EP2_OUT_Callback(void) {
     SetEPRxStatus(ENDP2, EP_RX_VALID);
 }
+
+void EP3_IN_Callback(void){
+}
+void EP3_OUT_Callback(void){
+	SetEPRxStatus(ENDP3,EP_RX_VALID);
+}
+
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
