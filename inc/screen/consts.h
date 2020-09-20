@@ -1,6 +1,8 @@
 #ifndef CONSTS_H_INCLUDED
 #define CONSTS_H_INCLUDED
 
+#include <task/keyscan.h>
+
 #include <HMI_Engine.h>
 enum ScreenId {
     SCREEN_Init_ID  = 1,
@@ -26,14 +28,10 @@ typedef struct {
 HMI_EVENT_TYPE_DECLARE(USB_STATE_EVENT,USB_STATE_EVENT_DATA)
 
 typedef struct {
-    uint8_t   length;
-    uint8_t   cursor;
-    uint32_t* keyCodes;
-} MappedKeyCodes_t;
-
-typedef struct {
-    MappedKeyCodes_t stPress;
-    MappedKeyCodes_t stRelease;
+    KeyUpdateInfo_t* pstPressed;
+    uint8_t uiPressedCount;
+    KeyUpdateInfo_t* pstRelease;
+    uint8_t uiReleaseCount;
 } KEY_EVENT_DATA;
 
 HMI_EVENT_TYPE_DECLARE(KEY_EVENT,KEY_EVENT_DATA)

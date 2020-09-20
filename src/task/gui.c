@@ -2,6 +2,7 @@
 #include <string.h>
 #include <SGUI_FontResource.h>
 #include <screen/hmi.h>
+#include <task/keyscan.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
@@ -42,8 +43,8 @@ static void graphicsUserInterfaceTask(void* parameters){
             //printf("event received! id=%d size=%d type=%d\r\n",pEvent->iID,pEvent->iSize,pEvent->iType);
             HMI_ProcessEvent(pEvent);
             if(pEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pEvent,KEY_EVENT)){
-                vPortFree(((KEY_EVENT*)pEvent)->Data.stPress.keyCodes);
-                vPortFree(((KEY_EVENT*)pEvent)->Data.stRelease.keyCodes);
+				clearKeyUpdateInfoList(((KEY_EVENT*)pEvent)->Data.pstPressed);
+				clearKeyUpdateInfoList(((KEY_EVENT*)pEvent)->Data.pstRelease);
             }
             vPortFree(pEvent);
         }

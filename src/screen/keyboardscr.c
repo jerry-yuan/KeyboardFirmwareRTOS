@@ -29,9 +29,9 @@ static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParam
 static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID);
 static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID);
 
-static void standardKeyboardTransferHandler        (KEY_EVENT* event,SGUI_INT* piActionId);
-static void consumerKeyboardStandbyTransferHandler (KEY_EVENT* event,SGUI_INT* piActionId);
-static void consumerKeyboardWorkingTransferHandler (KEY_EVENT* event,SGUI_INT* piActionId);
+static void standardKeyboardTransferHandler        (MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID);
+static void consumerKeyboardStandbyTransferHandler (MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID);
+static void consumerKeyboardWorkingTransferHandler (MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID);
 
 static HMI_SCREEN_ACTION screenActions = {
     Initialize,
@@ -77,9 +77,23 @@ static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParam
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
+    MappedKeyCodes_t stPressed,stRelease;
+	KEY_EVENT* pstKeyEvent;
     *piActionID = NoAction;
     if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)) {
-        stateMachine->transferHandler[stateMachine->currentState]((KEY_EVENT*)pstEvent,piActionID);
+        pstKeyEvent = (KEY_EVENT*)pstEvent;
+
+		stPressed.cursor	= 0;
+		stPressed.length	= pstKeyEvent->Data.uiPressedCount;
+		stPressed.keyCodes	= pvPortMalloc(sizeof(uint32_t)*stPressed.length);
+		mapKeyCodes(pstKeyEvent->Data.pstPressed,stPressed.keyCodes);
+
+		stRelease.cursor	= 0;
+		stRelease.length	= pstKeyEvent->Data.uiReleaseCount;
+		stRelease.keyCodes	= pvPortMalloc(sizeof(uint32_t)*stRelease.length);
+		mapKeyCodes(pstKeyEvent->Data.pstRelease,stRelease.keyCodes);
+
+        stateMachine->transferHandler[stateMachine->currentState](&stPressed,&stRelease,piActionID);
     } else if(pstEvent->iID == KEYBOARD_STATE_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEYBOARD_STATE_EVENT)) {
         *piActionID = RedrawState;
     } else if(pstEvent->iID == RTC_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,RTC_EVENT)){
@@ -160,59 +174,54 @@ static void removeFromStandardKeyboardReport(uint16_t keyCode,StandardKeyboardRe
 }
 
 
-void standardKeyboardTransferHandler(KEY_EVENT* event,SGUI_INT* piActionId) {
-    MappedKeyCodes_t* pressed   = &event->Data.stPress;
-    MappedKeyCodes_t* released  = &event->Data.stRelease;
-    if(pressed->length>0 && pressed->keyCodes[0] & KEY_Fn_BIT_MASK) {
+void standardKeyboardTransferHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
+    if(pstPressed->length>0 && pstPressed->keyCodes[0] & KEY_Fn_BIT_MASK) {
         // 发现是Fn键
         stateMachine->currentState=ConsumerKeyboardStandby;
-        if(pressed->length>1) {
-            pressed->cursor++;
-            consumerKeyboardStandbyTransferHandler(event,piActionId);
+        if(pstPressed->length>1) {
+            pstPressed->cursor++;
+            consumerKeyboardStandbyTransferHandler(pstPressed,pstRelease,piActionID);
         }
         memset(standardKeyboardReport,0,sizeof(StandardKeyboardReport_t));
     } else {
-        while(pressed->cursor<pressed->length) {
-            insertToStandardKeyboardReport(pressed->keyCodes[pressed->cursor],standardKeyboardReport);
-            pressed->cursor++;
+        while(pstPressed->cursor<pstPressed->length) {
+            insertToStandardKeyboardReport(pstPressed->keyCodes[pstPressed->cursor],standardKeyboardReport);
+            pstPressed->cursor++;
         }
-        while(released->cursor<released->length) {
-            removeFromStandardKeyboardReport(released->keyCodes[released->cursor],standardKeyboardReport);
-            released->cursor++;
+        while(pstRelease->cursor<pstRelease->length) {
+            removeFromStandardKeyboardReport(pstRelease->keyCodes[pstRelease->cursor],standardKeyboardReport);
+            pstRelease->cursor++;
         }
     }
     JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
 }
-void consumerKeyboardStandbyTransferHandler (KEY_EVENT* event,SGUI_INT* piActionId) {
-    MappedKeyCodes_t* released  = &event->Data.stRelease;
-    if(released->length>0 && (released->keyCodes[0]&KEY_Fn_BIT_MASK)) {
+void consumerKeyboardStandbyTransferHandler (MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
+    if(pstRelease->length>0 && (pstRelease->keyCodes[0]&KEY_Fn_BIT_MASK)) {
         stateMachine->currentState=StandardKeyboardWorking;
         if(TIM_ScreenSaver_IsEnabled()>0){
-            *piActionId = GoMenu;
+            *piActionID = GoMenu;
         }else{
-            *piActionId = TurnOnScreen;
+            *piActionID = TurnOnScreen;
         }
 
     } else {
         stateMachine->currentState=ConsumerKeyboardWorking;
-        consumerKeyboardWorkingTransferHandler(event,piActionId);
+        consumerKeyboardWorkingTransferHandler(pstPressed,pstRelease,piActionID);
     }
 }
-void consumerKeyboardWorkingTransferHandler (KEY_EVENT* event,SGUI_INT* piActionId) {
-    MappedKeyCodes_t* pressed   = &event->Data.stPress;
-    MappedKeyCodes_t* released  = &event->Data.stRelease;
-    if(released->length>0 &&  (released->keyCodes[0]&KEY_Fn_BIT_MASK)) {
+void consumerKeyboardWorkingTransferHandler (MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
+    if(pstRelease->length>0 &&  (pstRelease->keyCodes[0]&KEY_Fn_BIT_MASK)) {
         stateMachine->currentState=StandardKeyboardWorking;
-        standardKeyboardTransferHandler(event,piActionId);
+        standardKeyboardTransferHandler(pstPressed,pstRelease,piActionID);
     } else {
-        while(pressed->cursor < pressed->length) {
-            *consumerKeyboardReport |= (uint8_t)(((pressed->keyCodes[pressed->cursor])&0xFF0000)>>16);
-            pressed->cursor++;
+        while(pstPressed->cursor < pstPressed->length) {
+            *consumerKeyboardReport |= (uint8_t)(((pstPressed->keyCodes[pstPressed->cursor])&0xFF0000)>>16);
+            pstPressed->cursor++;
         }
 
-        while(released->cursor < released->length) {
-            *consumerKeyboardReport ^= (uint8_t)(((released->keyCodes[released->cursor])&0xFF0000)>>16);
-            released->cursor++;
+        while(pstRelease->cursor < pstRelease->length) {
+            *consumerKeyboardReport ^= (uint8_t)(((pstRelease->keyCodes[pstRelease->cursor])&0xFF0000)>>16);
+            pstRelease->cursor++;
         }
         JKBD_Send((uint8_t*)consumerKeyboardReport,sizeof(ConsumerKeyboardReport_t),ENDP2);
     }

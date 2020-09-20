@@ -4,6 +4,8 @@
 #include <HMI_Engine.h>
 #include <consts.h>
 
+#include <lib/keyboard.h>
+
 /** 键盘状态 **/
 #define KEYBOARD_STATE_NUMLOCK_MASK     0x01
 #define KEYBOARD_STATE_CAPSLOCK_MASK    0x02
@@ -25,7 +27,7 @@ typedef enum{
 
 typedef struct {
     KeyboardState_t currentState;
-    void (*transferHandler[3])(KEY_EVENT* event,SGUI_INT* piActionID);
+    void (*transferHandler[3])(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID);
 } KeyboardStateMachine_t;
 
 extern HMI_SCREEN_OBJECT SCREEN_Keyboard;

@@ -19,6 +19,9 @@ typedef struct {
 } KeyUpdateEvent_t;
 
 void keyScanTaskInitialize(void);
+void clearKeyUpdateInfoList(KeyUpdateInfo_t* head);
+
+
 extern TaskHandle_t hKeyScanTask;
 extern QueueHandle_t keyUpdateEventQueue;
 

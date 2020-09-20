@@ -1,7 +1,5 @@
 #include <screen/clock/show.h>
-
-#include <screen/utils.h>
-
+#include <lib/keyboard.h>
 #include <task/keyboard.h>
 
 #include <resources/Font.h>
@@ -113,16 +111,25 @@ HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
 }
 HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID){
     KEY_EVENT* pstKeyEvent;
+    MappedKeyCodes_t stRelease;
     *piActionID = NoAction;
     if(pstEvent->iID == RTC_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,RTC_EVENT)){
         *piActionID = RefreshScreen;
     }else if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)){
         pstKeyEvent = (KEY_EVENT*)pstEvent;
-        if(ContainsKey(&pstKeyEvent->Data.stRelease,KeyEscape)){
+
+		stRelease.cursor	= 0;
+        stRelease.length	= pstKeyEvent->Data.uiReleaseCount;
+        stRelease.keyCodes	= pvPortMalloc(sizeof(uint32_t)*pstKeyEvent->Data.uiReleaseCount);
+		mapKeyCodes(pstKeyEvent->Data.pstRelease,stRelease.keyCodes);
+
+        if(containsKey(&stRelease,KeyEscape)){
             *piActionID = GoBack;
-        }else if(ContainsKey(&pstKeyEvent->Data.stRelease,KeyInsert)){
+        }else if(containsKey(&stRelease,KeyInsert)){
             *piActionID = DoModify;
         }
+
+        vPortFree(stRelease.keyCodes);
     }
     return HMI_RET_NORMAL;
 }

@@ -1,12 +1,13 @@
 #include <screen/menuscr.h>
 #include <screen/consts.h>
-#include <screen/utils.h>
 #include <string.h>
 #include <FreeRTOS.h>
 #include <SGUI_Menu.h>
 
 #include <resources/Font.h>
 #include <task/keyboard.h>
+
+#include <lib/keyboard.h>
 
 enum MenuActions {
     NoAction=0,
@@ -69,16 +70,23 @@ static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParam
 }
 static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
     KEY_EVENT* keyEvent;
+    MappedKeyCodes_t stRelease;
     *piActionID = NoAction;
     if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)) {
         keyEvent = ((KEY_EVENT*)pstEvent);
-        if(ContainsKey(&keyEvent->Data.stRelease,KeyDown)) {
+
+        stRelease.cursor	= 0;
+        stRelease.length	= keyEvent->Data.uiReleaseCount;
+        stRelease.keyCodes	= pvPortMalloc(sizeof(uint32_t)*stRelease.length);
+		mapKeyCodes(keyEvent->Data.pstRelease,stRelease.keyCodes);
+
+        if(containsKey(&stRelease,KeyDown)) {
             *piActionID = GoDown;
-        } else if(ContainsKey(&keyEvent->Data.stRelease,KeyUp)) {
+        } else if(containsKey(&stRelease,KeyUp)) {
             *piActionID = GoUp;
-        } else if(ContainsKey(&keyEvent->Data.stRelease,KeyEscape)) {
+        } else if(containsKey(&stRelease,KeyEscape)) {
             *piActionID = GoBack;
-        } else if(ContainsKey(&keyEvent->Data.stRelease,KeyEnter)) {
+        } else if(containsKey(&stRelease,KeyEnter)) {
             *piActionID = Enter;
         }
     }
