@@ -6,14 +6,14 @@
 
 #include <resources/Font.h>
 #include <task/keyboard.h>
-
+#include <bsp/tim.h>
 #include <lib/keyboard.h>
 
 enum MenuActions {
-    NoAction=0,
+    NoAction=0x00,
     GoBack=0x01,
-    GoDown=0x80,
-    GoUp=0x81,
+    GoDown=0xC0,
+    GoUp=0xC1,
     Enter=0x02,
 };
 
@@ -70,25 +70,39 @@ static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParam
 }
 static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
     KEY_EVENT* keyEvent;
-    MappedKeyCodes_t stRelease;
+    MappedKeyCodes_t stPressed,stRelease;
     *piActionID = NoAction;
     if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)) {
         keyEvent = ((KEY_EVENT*)pstEvent);
+		iLastAction = NoAction;
+		TIM_KeyRepeater_Reset();
+
+        stPressed.cursor	= 0;
+        stPressed.length	= keyEvent->Data.uiPressedCount;
+        stPressed.keyCodes	= pvPortMalloc(sizeof(uint32_t)*stPressed.length);
+		mapKeyCodes(keyEvent->Data.pstPressed,stPressed.keyCodes);
 
         stRelease.cursor	= 0;
         stRelease.length	= keyEvent->Data.uiReleaseCount;
         stRelease.keyCodes	= pvPortMalloc(sizeof(uint32_t)*stRelease.length);
 		mapKeyCodes(keyEvent->Data.pstRelease,stRelease.keyCodes);
 
-        if(containsKey(&stRelease,KeyDown)) {
-            *piActionID = GoDown;
-        } else if(containsKey(&stRelease,KeyUp)) {
-            *piActionID = GoUp;
+        if(containsKey(&stPressed,KeyDown)) {
+            iLastAction=*piActionID = GoDown;
+        } else if(containsKey(&stPressed,KeyUp)) {
+            iLastAction=*piActionID = GoUp;
         } else if(containsKey(&stRelease,KeyEscape)) {
             *piActionID = GoBack;
         } else if(containsKey(&stRelease,KeyEnter)) {
             *piActionID = Enter;
         }
+        if(iLastAction & 0x40) {
+            TIM_KeyRepeater_Set();
+        }
+    }else if(pstEvent->iID == KEY_REPEAT_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_REPEAT_EVENT)){
+		if(iLastAction!=NoAction){
+			*piActionID = iLastAction;
+		}
     }
     return HMI_RET_NORMAL;
 }

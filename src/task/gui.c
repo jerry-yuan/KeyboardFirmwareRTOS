@@ -40,13 +40,16 @@ static void graphicsUserInterfaceTask(void* parameters){
     while(1){
         xReturn=xQueueReceive(hEventQueue,&pEvent,portMAX_DELAY);
         if(xReturn==pdPASS){
-            //printf("event received! id=%d size=%d type=%d\r\n",pEvent->iID,pEvent->iSize,pEvent->iType);
+			//printf("event received! id=%d size=%d type=%d\r\n",pEvent->iID,pEvent->iSize,pEvent->iType);
             HMI_ProcessEvent(pEvent);
             if(pEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pEvent,KEY_EVENT)){
 				clearKeyUpdateInfoList(((KEY_EVENT*)pEvent)->Data.pstPressed);
 				clearKeyUpdateInfoList(((KEY_EVENT*)pEvent)->Data.pstRelease);
             }
-            vPortFree(pEvent);
+            if(pEvent->iID != KEY_REPEAT_EVENT_ID){
+	            vPortFree(pEvent);
+            }
+
         }
     }
 }

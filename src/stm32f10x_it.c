@@ -26,6 +26,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x_it.h"
 
+#include <bsp/tim.h>
 #include <bsp/oled.h>
 
 #include "FreeRTOS.h"					//FreeRTOS使用
@@ -153,24 +154,30 @@ void SysTick_Handler(void) {
 /*  file (startup_stm32f10x_xx.s).                                            */
 /******************************************************************************/
 
-void RTC_IRQHandler(void){
+void RTC_IRQHandler(void) {
     BaseType_t xReturn = pdPASS;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    if(RTC_GetITStatus(RTC_IT_SEC) != RESET){
+    if(RTC_GetITStatus(RTC_IT_SEC) != RESET) {
         RTC_ClearITPendingBit(RTC_IT_SEC);
         xReturn=xEventGroupSetBitsFromISR(hRTCEvent,RTC_EVENT_BIT,&xHigherPriorityTaskWoken);
-        if(xReturn == pdFAIL){
+        if(xReturn == pdFAIL) {
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     }
 
 }
-void TIM2_IRQHandler(void){
+void TIM2_IRQHandler(void) {
     if (TIM_GetITStatus( TIM2, TIM_IT_Update) != RESET) {
         TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
-        TIM_Cmd(TIM2,DISABLE);
-        TIM_SetCounter(TIM2,0);
-        OLED_SetDisplayState(false);
+        TIM_ScreenSaver_IRQHandler();
+    }
+}
+void TIM3_IRQHandler(void) {
+    if (TIM_GetITStatus( TIM3, TIM_IT_Update) != RESET) {
+        TIM_ClearITPendingBit(TIM3 , TIM_FLAG_Update);
+        if(TIM_KeyRepeater_IRQHandler!=NULL) {
+            TIM_KeyRepeater_IRQHandler();
+        }
     }
 }
 /**

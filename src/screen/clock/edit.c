@@ -3,7 +3,7 @@
 #include <task/keyboard.h>
 
 #include <resources/Font.h>
-
+#include <bsp/tim.h>
 #include <SGUI_Basic.h>
 #include <SGUI_Text.h>
 #include <SGUI_FontResource.h>
@@ -15,13 +15,14 @@
 
 #define MASK_REFRESH_SCREEN 0x80
 #define MASK_GO_BACK        0x40
+#define MASK_START_REPEATER 0x20
 
-enum{
+enum {
     NoAction        = 0x00,
-    TurnUp          = 0x81,
-    TurnDown        = 0x82,
-    SwitchFiledR    = 0x83,
-    SwitchFiledL    = 0x84,
+    TurnUp          = 0xA1,
+    TurnDown        = 0xA2,
+    SwitchFiledR    = 0xA3,
+    SwitchFiledL    = 0xA4,
     SetTime         = 0x41,
     GoBack          = 0x40
 };
@@ -32,7 +33,7 @@ static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParam
 static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID);
 static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID);
 
-static HMI_SCREEN_ACTION screenActions={
+static HMI_SCREEN_ACTION screenActions= {
     Initialize,
     Prepare,
     Refresh,
@@ -40,7 +41,7 @@ static HMI_SCREEN_ACTION screenActions={
     PostProcess
 };
 
-HMI_SCREEN_OBJECT SCREEN_Clock_Edit={SCREEN_Clock_Edit_ID,&screenActions};
+HMI_SCREEN_OBJECT SCREEN_Clock_Edit= {SCREEN_Clock_Edit_ID,&screenActions};
 
 const uint8_t daysOfMonth[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
 
@@ -55,7 +56,7 @@ static SGUI_NUM_VARBOX_STRUCT*  pstBoxArr=NULL;
 
 static uint8_t                  uiBoxFocus=0;
 
-HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF){
+HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     SGUI_NUM_VARBOX_PARAM	stNumBoxInitParam;
 
     pstBoxArr   = pvPortMalloc(sizeof(SGUI_NUM_VARBOX_STRUCT)*6);
@@ -122,7 +123,7 @@ HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF){
 
     return HMI_RET_NORMAL;
 }
-HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
+HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
     SGUI_NOTICE_BOX stNoticeBox;
     SGUI_RECT stRect;
     SGUI_POINT stPoint;
@@ -174,14 +175,14 @@ HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
     Refresh(pstDeviceIF,pstParameters);
     return HMI_RET_NORMAL;
 }
-HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
+HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
     // 判断月份日期越界问题
     uint16_t uiYear=pstYearBox->stData.iValue;
     uint8_t  uiMonth=pstMonthBox->stData.iValue;
     uint8_t  uiDaysOffset;
-    if((uiYear%4 == 0 && uiYear%100 !=0 ) || uiYear%400 == 0){
+    if((uiYear%4 == 0 && uiYear%100 !=0 ) || uiYear%400 == 0) {
         uiDaysOffset = 1;
-    }else{
+    } else {
         uiDaysOffset = 0;
     }
     pstDayBox->stParam.iMax=daysOfMonth[uiMonth-1]+(uiMonth==2?uiDaysOffset:0);
@@ -195,47 +196,65 @@ HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
     SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstSecBox,uiBoxFocus==5?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
     return HMI_RET_NORMAL;
 }
-HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID){
+HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
     KEY_EVENT* pstKeyEvent;
-    MappedKeyCodes_t stRelease;
+    MappedKeyCodes_t stPressed,stRelease;
 
     *piActionID = NoAction;
-    if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)){
+    if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)) {
         pstKeyEvent = (KEY_EVENT*)pstEvent;
-		stRelease.length	= pstKeyEvent->Data.uiReleaseCount;
-        stRelease.keyCodes	= pvPortMalloc(sizeof(uint32_t)*pstKeyEvent->Data.uiReleaseCount);
+        iLastAction = NoAction;
 
+        TIM_KeyRepeater_Reset();
+
+        stPressed.cursor    = 0;
+        stPressed.length	= pstKeyEvent->Data.uiPressedCount;
+        stPressed.keyCodes	= pvPortMalloc(sizeof(uint32_t)*stPressed.length);
+        mapKeyCodes(pstKeyEvent->Data.pstPressed,stPressed.keyCodes);
+
+        stRelease.cursor    = 0;
+        stRelease.length	= pstKeyEvent->Data.uiReleaseCount;
+        stRelease.keyCodes	= pvPortMalloc(sizeof(uint32_t)*stRelease.length);
         mapKeyCodes(pstKeyEvent->Data.pstRelease,stRelease.keyCodes);
 
-        if(containsKey(&stRelease,KeyUp)){
-            *piActionID = TurnUp;
-        }else if(containsKey(&stRelease,KeyDown)){
-            *piActionID = TurnDown;
-        }else if(containsKey(&stRelease,KeyTab)||containsKey(&stRelease,KeyRight)){
-            *piActionID = SwitchFiledR;
-        }else if(containsKey(&stRelease,KeyLeft)){
-            *piActionID = SwitchFiledL;
-        }else if(containsKey(&stRelease,KeyEnter)){
+        if(containsKey(&stPressed,KeyUp)) {
+            iLastAction=*piActionID = TurnUp;
+        } else if(containsKey(&stPressed,KeyDown)) {
+            iLastAction=*piActionID = TurnDown;
+        } else if(containsKey(&stPressed,KeyTab)||containsKey(&stPressed,KeyRight)) {
+            iLastAction=*piActionID = SwitchFiledR;
+        } else if(containsKey(&stPressed,KeyLeft)) {
+            iLastAction=*piActionID = SwitchFiledL;
+        } else if(containsKey(&stRelease,KeyEnter)) {
             *piActionID = SetTime;
-        }else if(containsKey(&stRelease,KeyEscape)){
+        } else if(containsKey(&stRelease,KeyEscape)) {
             *piActionID = GoBack;
         }
 
+        vPortFree(stPressed.keyCodes);
         vPortFree(stRelease.keyCodes);
+
+        if(iLastAction & MASK_START_REPEATER) {
+            TIM_KeyRepeater_Set();
+        }
+    } else if(pstEvent->iID == KEY_REPEAT_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_REPEAT_EVENT)) {
+        if(iLastAction!=NoAction) {
+            *piActionID = iLastAction;
+        }
     }
     return HMI_RET_NORMAL;
 }
-HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID){
+HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID) {
     struct tm* pstTime;
-    if(iActionID == SwitchFiledR){
+    if(iActionID == SwitchFiledR) {
         uiBoxFocus = (uiBoxFocus+1)%6;
-    }else if(iActionID == SwitchFiledL){
+    } else if(iActionID == SwitchFiledL) {
         uiBoxFocus = (uiBoxFocus+5)%6;
-    }else if(iActionID == TurnUp){
+    } else if(iActionID == TurnUp) {
         SGUI_NumberVariableBox_Increase(pstBoxArr+uiBoxFocus);
-    }else if(iActionID == TurnDown){
+    } else if(iActionID == TurnDown) {
         SGUI_NumberVariableBox_Decrease(pstBoxArr+uiBoxFocus);
-    }else if(iActionID == SetTime){
+    } else if(iActionID == SetTime) {
         pstTime = pvPortMalloc(sizeof(struct tm));
         pstTime->tm_year    = pstYearBox->stData.iValue - 1900;
         pstTime->tm_mon     = pstMonthBox->stData.iValue - 1;
@@ -247,10 +266,10 @@ HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT ePro
         RTC_WaitForLastTask();
         vPortFree(pstTime);
     }
-    if(iActionID & MASK_GO_BACK){
+    if(iActionID & MASK_GO_BACK) {
         HMI_GoBack(NULL);
     }
-    if(iActionID & MASK_REFRESH_SCREEN){
+    if(iActionID & MASK_REFRESH_SCREEN) {
         Refresh(pstDeviceIF,NULL);
     }
     return HMI_RET_NORMAL;

@@ -3,15 +3,28 @@
 
 #include <stm32f10x.h>
 #include <stdbool.h>
-
+#include <SGUI_Typedef.h>
 #define TIM_SCREEN_SAVER_PRESCALER      36000
 #define TIM_SCREEN_SAVER_PERIOD         10
 #define TIM_SCREEN_SAVER_COUNTER_RESET  72000000/TIM_SCREEN_SAVER_PRESCALER*TIM_SCREEN_SAVER_PERIOD
+
+#define TIM_KEY_REPEATER_PRESCALER				36000
+#define TIM_KEY_REPEATER_DELAY_PERIOD			300
+#define TIM_KEY_REPEATER_REPEAT_PERIOD			100
+#define TIM_KEY_REPEATER_DELAY_COUNTER_RESET	72000/TIM_KEY_REPEATER_PRESCALER*TIM_KEY_REPEATER_DELAY_PERIOD
+#define TIM_KEY_REPEATER_REPEAT_COUNTER_RESET	72000/TIM_KEY_REPEATER_PRESCALER*TIM_KEY_REPEATER_REPEAT_PERIOD
 
 void TIM_Initialize();
 
 void TIM_ScreenSaver_Reset();
 void TIM_ScreenSaver_Disable();
 bool TIM_ScreenSaver_IsEnabled();
+void TIM_ScreenSaver_IRQHandler();
+
+void TIM_KeyRepeater_Set();
+void TIM_KeyRepeater_Reset();
+void (*TIM_KeyRepeater_IRQHandler)();
+
+extern SGUI_INT iLastAction;
 
 #endif /* TIM_H_INCLUDED */

@@ -4,6 +4,7 @@
 #include <task/keyscan.h>
 
 #include <HMI_Engine.h>
+
 enum ScreenId {
     SCREEN_Init_ID  = 1,
     SCREEN_USB_State_ID,
@@ -17,7 +18,8 @@ enum EventId {
     USB_STATE_EVENT_ID    = 1,
     KEY_EVENT_ID,
     KEYBOARD_STATE_EVENT_ID,
-    RTC_EVENT_ID
+    RTC_EVENT_ID,
+    KEY_REPEAT_EVENT_ID
 };
 
 // Events
@@ -35,6 +37,7 @@ typedef struct {
 } KEY_EVENT_DATA;
 
 HMI_EVENT_TYPE_DECLARE(KEY_EVENT,KEY_EVENT_DATA)
+HMI_EVENT_TYPE_DECLARE(KEY_REPEAT_EVENT,char)
 
 HMI_EVENT_TYPE_DECLARE(KEYBOARD_STATE_EVENT,uint32_t)
 HMI_EVENT_TYPE_DECLARE(RTC_EVENT,uint8_t)
