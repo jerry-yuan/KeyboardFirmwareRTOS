@@ -94,6 +94,10 @@ static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_
 		mapKeyCodes(pstKeyEvent->Data.pstRelease,stRelease.keyCodes);
 
         stateMachine->transferHandler[stateMachine->currentState](&stPressed,&stRelease,piActionID);
+
+        vPortFree(stPressed.keyCodes);
+        vPortFree(stRelease.keyCodes);
+
     } else if(pstEvent->iID == KEYBOARD_STATE_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEYBOARD_STATE_EVENT)) {
         *piActionID = RedrawState;
     } else if(pstEvent->iID == RTC_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,RTC_EVENT)){
