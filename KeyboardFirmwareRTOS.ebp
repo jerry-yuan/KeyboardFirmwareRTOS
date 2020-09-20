@@ -141,6 +141,7 @@
 		<Unit filename="inc\delay.h" />
 		<Unit filename="inc\FreeRTOSConfig.h" />
 		<Unit filename="inc\lib\GUIToolLib.h" />
+		<Unit filename="inc\lib\keyboard.h" />
 		<Unit filename="inc\resources\Font.h" />
 		<Unit filename="inc\screen\clock\edit.h" />
 		<Unit filename="inc\screen\clock\show.h" />
@@ -150,7 +151,6 @@
 		<Unit filename="inc\screen\keyboardscr.h" />
 		<Unit filename="inc\screen\menuscr.h" />
 		<Unit filename="inc\screen\usbscr.h" />
-		<Unit filename="inc\screen\utils.h" />
 		<Unit filename="inc\stm32f10x.h" />
 		<Unit filename="inc\stm32f10x_conf.h" />
 		<Unit filename="inc\stm32f10x_it.h" />
@@ -295,6 +295,9 @@
 		<Unit filename="src\lib\GUIToolLib.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src\lib\keyboard.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src\lib\math.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -323,9 +326,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\screen\usbscr.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src\screen\utils.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\startup_stm32f10x_hd.S">
