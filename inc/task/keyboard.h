@@ -11,7 +11,6 @@
 
 #define KEY_STATE_EVENT_UPDATE          (1<<23)
 
-extern TaskHandle_t hKeyboardTask;
 extern TaskHandle_t hKeyboardStatTask;
 
 extern EventGroupHandle_t hKeyboardStateUpdateEvent;
