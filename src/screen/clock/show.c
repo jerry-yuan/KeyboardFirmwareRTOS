@@ -51,6 +51,7 @@ HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
 
     noticeBox.stPalette.eEdgeColor = 0x0A;
     noticeBox.stPalette.eFillColor = 0x00;
+    noticeBox.stPalette.eTextColor = 0x0F;
     noticeBox.stPalette.uiDepthBits= 4;
 
     SGUI_Notice_Repaint(pstDeviceIF,&noticeBox,SGUI_FONT_REF(Deng12),0);
@@ -79,8 +80,8 @@ HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
 
     pstTime=gmtime(&timestamp);
     strftime(buff,sizeof(buff), "%Y年%m月%d日 %H:%M:%S", pstTime);
-
-    SGUI_Text_DrawText(pstDeviceIF,buff,SGUI_FONT_REF(Deng12),&rect,&point,SGUI_DRAW_NORMAL);
+	SGUI_Basic_DrawRectangle(pstDeviceIF,35,30,200,12,0,0);
+    SGUI_Text_DrawText(pstDeviceIF,buff,SGUI_FONT_REF(Deng12),&rect,&point,0x0A);
     //画表盘
     SGUI_Basic_DrawCircle(pstDeviceIF,223,31,23,0x0A,0x00);
     for(uint8_t i=0;i<12;i++){

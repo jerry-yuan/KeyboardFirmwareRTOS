@@ -38,7 +38,7 @@ static SGUI_MENU_STRUCT* menuObject=NULL;
 static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     SGUI_RECT menuRect;
     SGUI_ITEMS_ITEM* menuItems=NULL;
-
+	SGUI_MENU_PALETTE menuPalette;
     menuItems  = pvPortMalloc(sizeof(SGUI_ITEMS_ITEM)*5);
     memset(menuItems,0,sizeof(SGUI_ITEMS_ITEM)*5);
     menuItems[0].cszLabelText = "时钟";
@@ -56,7 +56,15 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     menuRect.iWidth=256;
     menuRect.iHeight=64;
 
-    SGUI_Menu_Initialize(menuObject,SGUI_FONT_REF(Deng12),&menuRect,menuItems,5);
+	menuPalette.uiDepthBits = 4;
+	menuPalette.eBorder = 0x0F;
+	menuPalette.eDirectionIconColor = 0x0F;
+	menuPalette.stItemBase.eBackgroundColor = 0x01;
+	menuPalette.stItemBase.eTextColor = 0x0F;
+	menuPalette.stItemBase.eFocusColor = 0x05;
+	menuPalette.stItemBase.eFocusTextColor = 0x0F;
+
+    SGUI_Menu_Initialize(menuObject,SGUI_FONT_REF(Deng12),&menuRect,menuItems,5,&menuPalette);
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {

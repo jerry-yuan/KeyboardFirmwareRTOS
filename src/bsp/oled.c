@@ -158,9 +158,15 @@ void OLED_SetPixel(SGUI_INT x,SGUI_INT y,SGUI_COLOR color) {
 
 }
 SGUI_COLOR OLED_GetPixel(SGUI_INT x,SGUI_INT y) {
-    y=y&0x3F;
-    return (*(oledFramebuffer+(y&0x3F)*OLED_SCREEN_WIDTH+x/OLED_PIXEL_PER_BYTE)>>(x%2?0:4))&0x0F;
-    //return (oledFramebuffer[y&0x3F][x/2]>>(x%2?0:4))&0x0F;
+	y = y&0x3F;
+	uint8_t* origin = oledFramebuffer+y*OLED_SCREEN_WIDTH/OLED_PIXEL_PER_BYTE+x/OLED_PIXEL_PER_BYTE;
+	if(x&0x01){
+		// 奇数列 ==> 取原有数据低四位
+		return *origin & 0x0F;
+	}else{
+		// 偶数列 ==> 取原有数据高四位
+		return (*origin & 0xF0)>>4;
+	}
 }
 void OLED_SyncBuffer() {
     OLED_SendBuffer(OLED_DISPLAY,oledFramebuffer,OLED_FRAMEBUFFER_SIZE);

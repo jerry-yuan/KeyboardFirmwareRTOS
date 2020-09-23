@@ -40,6 +40,7 @@ HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
         noticeBox->stPalette.uiDepthBits=4;
         noticeBox->stPalette.eEdgeColor=0xA;
         noticeBox->stPalette.eFillColor=0x0;
+		noticeBox->stPalette.eTextColor	= 0x0A;
     }
     return HMI_RET_NORMAL;
 }

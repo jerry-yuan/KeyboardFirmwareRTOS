@@ -73,6 +73,12 @@ HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     stNumBoxInitParam.stLayout.iHeight  = 12;
     stNumBoxInitParam.stLayout.iY       = 26;
 
+    stNumBoxInitParam.stPalette.uiDepthBits = 4;
+    stNumBoxInitParam.stPalette.stFocus.eBackgroundColor = 0x05;
+    stNumBoxInitParam.stPalette.stFocus.eTextColor = 0x0F;
+    stNumBoxInitParam.stPalette.stNormal.eBackgroundColor= 0x00;
+    stNumBoxInitParam.stPalette.stNormal.eTextColor=0x0F;
+
     // 初始化年份输入框
     stNumBoxInitParam.iMin              = 1970;
     stNumBoxInitParam.iMax              = 2038;
@@ -138,6 +144,7 @@ HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) 
     stNoticeBox.pstIcon                 = NULL;
     stNoticeBox.stPalette.eEdgeColor    = 0x0A;
     stNoticeBox.stPalette.eFillColor    = 0x00;
+    stNoticeBox.stPalette.eTextColor	= 0x0A;
     stNoticeBox.stPalette.uiDepthBits   = 4;
 
     SGUI_Notice_Repaint(pstDeviceIF,&stNoticeBox,SGUI_FONT_REF(Deng12),0);
@@ -178,8 +185,9 @@ HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) 
 HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
     // 判断月份日期越界问题
     uint16_t uiYear=pstYearBox->stData.iValue;
-    uint8_t  uiMonth=pstMonthBox->stData.iValue;
-    uint8_t  uiDaysOffset;
+    uint8_t uiMonth=pstMonthBox->stData.iValue;
+    uint8_t uiDaysOffset;
+    uint8_t uiBoxIndex;
     if((uiYear%4 == 0 && uiYear%100 !=0 ) || uiYear%400 == 0) {
         uiDaysOffset = 1;
     } else {
@@ -188,12 +196,16 @@ HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) 
     pstDayBox->stParam.iMax=daysOfMonth[uiMonth-1]+(uiMonth==2?uiDaysOffset:0);
     pstDayBox->stData.iValue = SGUI_MIN_OF(pstDayBox->stData.iValue,pstDayBox->stParam.iMax);
 
-    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstYearBox,uiBoxFocus==0?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
-    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstMonthBox,uiBoxFocus==1?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
-    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstDayBox,uiBoxFocus==2?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
-    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstHourBox,uiBoxFocus==3?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
-    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstMinBox,uiBoxFocus==4?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
-    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstSecBox,uiBoxFocus==5?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
+	for(uiBoxIndex=0;uiBoxIndex<6;uiBoxIndex++){
+		pstBoxArr[uiBoxIndex].stData.iFocused = (uiBoxFocus == uiBoxIndex)?SGUI_TRUE:SGUI_FALSE;
+	}
+
+    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstYearBox);
+    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstMonthBox);
+    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstDayBox);
+    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstHourBox);
+    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstMinBox);
+    SGUI_NumberVariableBox_Repaint(pstDeviceIF,pstSecBox);
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
