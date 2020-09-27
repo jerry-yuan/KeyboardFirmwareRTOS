@@ -5,5 +5,7 @@ file
 fill
 0x010000
 file
-Deng_U14.bin
+Deng12.bin
+file
+LCD.bin
 exit

@@ -1,7 +1,9 @@
 bin/*
 obj/*
+cscope.out
 *.cscope_file_list
 *.depend
 *.elay
 *.lnk
 *.crf
+tools/*

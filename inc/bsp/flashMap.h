@@ -13,8 +13,12 @@
 #define FLASH_ADDR_RSVDIMG5 	    0x00C000
 #define FLASH_ADDR_RSVDIMG6 	    0x00E000
 
-/**等线字库 12x12**/
+/** 等线12px字库 **/
 #define FLASH_ADDR_DENGFONT_12      0x010000
+
+/** LCD斜体44px字库 **/
+#define FLASH_ADDR_LCDFONT_44		0x20D597
+
 
 #endif /* FLASHMAP_H_INCLUDED */
 

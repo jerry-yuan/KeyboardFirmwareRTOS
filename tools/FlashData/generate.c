@@ -60,7 +60,9 @@ int main(){
 			while(size-- && offset<0x7FFFFF){
 				fputc(fgetc(fin),fout);
 				offset++;
-				printf("\r正在拷贝数据,已经拷贝%d字节,当前地址[%06X]",offset-temp,offset);
+				if((offset-temp) % 0x0100 == 0){
+					printf("\r正在拷贝数据,已经拷贝%d字节,当前地址[%06X]",offset-temp,offset);
+				}
 			}
 			printf("拷贝完成\n");
 			printf("成功拷贝%d字节\n",offset-temp);
