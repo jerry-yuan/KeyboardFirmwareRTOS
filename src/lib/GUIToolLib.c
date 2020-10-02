@@ -2,6 +2,23 @@
 #include<GUIToolLib.h>
 #include<bsp/w25q64.h>
 #include <FreeRTOS.h>
+
+static void dumpMemory(const uint8_t* src,uint32_t length){
+	printf("  ADDR   |");
+    for(uint8_t i=0;i<16;i++){
+        printf(" %02X",i);
+    }
+    printf("\r\n----------------------------------------------------------");
+    for (uint32_t i = 0; i < length; i++) {
+        if (i % 16 == 0) {
+            printf("\r\n");
+            printf("%08X |",(unsigned int)src);
+        }
+        printf(" %02X", *(src++));
+    }
+    printf("\r\n");
+}
+
 static uint8_t getPixel(uint8_t* src,int x,int y,int xSize){
     uint8_t bytesPerLine = (xSize+1)/2;
     if(x%2){
@@ -48,9 +65,9 @@ void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,const uint32_t u
 	W25X_Read_Data((uint8_t*)&stCharInfo,uiFontOffset+stSection.pCharInfoAddr+sizeof(GUI_FONT_CHARINFO)*(uiCode-stSection.uiFirst),sizeof(stSection));
 
 	pstBitmap->fnGetPixel = SGUI_BMP_SCAN_MODE_DHPH;
-	pstBitmap->iDepthBits = 4;
+	pstBitmap->iDepthBits = stHeader.uiDepthBits;
 	pstBitmap->iHeight = stHeader.uiYSize;
-	pstBitmap->iWidth = stCharInfo.uiOffsetAddr >> 24;
+	pstBitmap->iWidth = SGUI_MAX_OF(stCharInfo.uiOffsetAddr >> 24,stCharInfo.uiXPos+stCharInfo.uiXSize);
 
 	if(pstBitmap->pData!=NULL){
 		// 读取数据

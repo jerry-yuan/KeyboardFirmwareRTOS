@@ -11,6 +11,8 @@
 #include <screen/clock/show.h>
 #include <screen/clock/edit.h>
 
+#include <screen/calculator/calculator.h>
+
 void hmiEngineInitialize();
 
 extern HMI_ENGINE_OBJECT* hmiEngine;

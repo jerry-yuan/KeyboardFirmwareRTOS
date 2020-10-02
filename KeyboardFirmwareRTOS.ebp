@@ -143,6 +143,7 @@
 		<Unit filename="inc\lib\GUIToolLib.h" />
 		<Unit filename="inc\lib\keyboard.h" />
 		<Unit filename="inc\resources\Font.h" />
+		<Unit filename="inc\screen\calculator\calculator.h" />
 		<Unit filename="inc\screen\clock\edit.h" />
 		<Unit filename="inc\screen\clock\show.h" />
 		<Unit filename="inc\screen\consts.h" />
@@ -305,6 +306,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\resource\Font.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\screen\calculator\calculator.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\screen\clock\edit.c">

@@ -11,7 +11,8 @@ enum ScreenId {
     SCREEN_Keyboard_State_ID,
     SCREEN_Menu_ID,
     SCREEN_Clock_Show_ID,
-    SCREEN_Clock_Edit_ID
+    SCREEN_Clock_Edit_ID,
+    SCREEN_Calculator_ID
 };
 
 enum EventId {

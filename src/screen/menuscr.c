@@ -42,7 +42,7 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     menuItems  = pvPortMalloc(sizeof(SGUI_ITEMS_ITEM)*5);
     memset(menuItems,0,sizeof(SGUI_ITEMS_ITEM)*5);
     menuItems[0].cszLabelText = "时钟";
-    menuItems[1].cszLabelText = "菜单2";
+    menuItems[1].cszLabelText = "计算器";
     menuItems[2].cszLabelText = "菜单3";
     menuItems[3].cszLabelText = "菜单4";
     menuItems[4].cszLabelText = "菜单5";
@@ -124,6 +124,8 @@ static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESU
     } else if(iActionID == Enter){
         if(menuObject->stItems.iSelection == 0){
             HMI_SwitchScreen(SCREEN_Clock_Show_ID,NULL);
+        }else if(menuObject->stItems.iSelection == 1){
+			HMI_SwitchScreen(SCREEN_Calculator_ID,NULL);
         }
     }
 
