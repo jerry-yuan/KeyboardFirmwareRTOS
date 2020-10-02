@@ -46,13 +46,15 @@ HMI_SCREEN_OBJECT SCREEN_Keyboard = {SCREEN_Keyboard_State_ID,&screenActions};
 static KeyboardStateMachine_t* stateMachine=NULL;
 
 static StandardKeyboardReport_t*    standardKeyboardReport;
-static ConsumerKeyboardReport_t*    consumerKeyboardReport;
+static ExtendedKeyboardReport_t*    extendedKeyboardReport;
 
 static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     standardKeyboardReport = (StandardKeyboardReport_t*)pvPortMalloc(sizeof(StandardKeyboardReport_t));
-    consumerKeyboardReport = (ConsumerKeyboardReport_t*)pvPortMalloc(sizeof(ConsumerKeyboardReport_t));
+    extendedKeyboardReport = (ExtendedKeyboardReport_t*)pvPortMalloc(sizeof(ExtendedKeyboardReport_t));
     memset(standardKeyboardReport,0,sizeof(StandardKeyboardReport_t));
-    memset(consumerKeyboardReport,0,sizeof(ConsumerKeyboardReport_t));
+    memset(extendedKeyboardReport,0,sizeof(ExtendedKeyboardReport_t));
+
+	extendedKeyboardReport->reportId = 1;
 
     stateMachine = (KeyboardStateMachine_t*)pvPortMalloc(sizeof(KeyboardStateMachine_t));
     stateMachine->currentState = StandardKeyboardWorking;
@@ -78,6 +80,7 @@ static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParam
 }
 static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
     MappedKeyCodes_t stPressed,stRelease;
+    ExtendedKeyboardReport_t report;
 	KEY_EVENT* pstKeyEvent;
     *piActionID = NoAction;
     if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)) {
@@ -102,6 +105,12 @@ static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_
         *piActionID = RedrawState;
     } else if(pstEvent->iID == RTC_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,RTC_EVENT)){
         // do nothing
+        if(RTC_GetCounter()%10==0){
+			report.reportId=2;
+			report.reportData.unicodeReport.unicode[0]='A';
+			report.reportData.unicodeReport.unicode[1]=0x00;
+			JKBD_Send((uint8_t*)&report,sizeof(ExtendedKeyboardReport_t),ENDP2);
+        }
     }else{
         *piActionID = TurnOnScreen;
     }
@@ -219,14 +228,14 @@ void consumerKeyboardWorkingTransferHandler (MappedKeyCodes_t* pstPressed,Mapped
         standardKeyboardTransferHandler(pstPressed,pstRelease,piActionID);
     } else {
         while(pstPressed->cursor < pstPressed->length) {
-            *consumerKeyboardReport |= (uint8_t)(((pstPressed->keyCodes[pstPressed->cursor])&0xFF0000)>>16);
+            extendedKeyboardReport->reportData.consumerReport.keys[0] |= (uint8_t)(((pstPressed->keyCodes[pstPressed->cursor])&0xFF0000)>>16);
             pstPressed->cursor++;
         }
 
         while(pstRelease->cursor < pstRelease->length) {
-            *consumerKeyboardReport ^= (uint8_t)(((pstRelease->keyCodes[pstRelease->cursor])&0xFF0000)>>16);
+            extendedKeyboardReport->reportData.consumerReport.keys[0] ^= (uint8_t)(((pstRelease->keyCodes[pstRelease->cursor])&0xFF0000)>>16);
             pstRelease->cursor++;
         }
-        JKBD_Send((uint8_t*)consumerKeyboardReport,sizeof(ConsumerKeyboardReport_t),ENDP2);
+        JKBD_Send((uint8_t*)extendedKeyboardReport,sizeof(ExtendedKeyboardReport_t),ENDP2);
     }
 }

@@ -176,7 +176,7 @@ const uint8_t JKBD_StdKbdReportDescriptor[JKBD_SIZ_STDKBD_REPORT_DESC] = {
     0x25, 0x01,         //     LOGICAL_MAXIMUM (1)                  [逻辑最大为1==>按下]
     0x95, 0x08,         //     REPORT_COUNT (8)                     [控制键:8个报告-键盘输出8个控制键的信息]
     0x75, 0x01,         //     REPORT_SIZE (1)                      [控制键:1个报告1bit==>一个控制键一个bit,共计一个字节]
-    0x81, 0x02,         //     INPUT (Data,Var,Abs)                 [按键为输入(相对于主机),数据,变量,绝对值]
+    0x81, 0x00,         //     INPUT (Data,Var,Abs)                 [按键为输入(相对于主机),数据,变量,绝对值]
     /**    {BYTE1:保留一个字节}      */
     0x95, 0x01,         //     REPORT_COUNT (1)                     [保留字节:一个报告]
     0x75, 0x08,         //     REPORT_SIZE (8)                      [保留字节:每个报告8Bit]
@@ -184,8 +184,8 @@ const uint8_t JKBD_StdKbdReportDescriptor[JKBD_SIZ_STDKBD_REPORT_DESC] = {
     /**    {BYTE2~8:其他按键输出}    */
     0x95, 0x06,         //     REPORT_COUNT (6)                     [按键:同时允许6个按键同时按下,6个报告]
     0x75, 0x08,         //     REPORT_SIZE (8)                      [按键:每个按键描述符由一个字节组成]
-    0x15, 0x01,         //   LOGICAL_MINIMUM (1) [按键描述符最小为1]
-    0x26, 0xff, 0x00,   //   LOGICAL_MAXIMUM (255)[按键描述符最大为255]
+    0x15, 0x01,         //     LOGICAL_MINIMUM (1) 					[按键描述符最小为1]
+    0x26, 0xff, 0x00,   //     LOGICAL_MAXIMUM (255)				[按键描述符最大为255]
     0x19, 0x00,         //     USAGE_MINIMUM (Reserved (no event indicated))    [最小值为保留按键]
     0x29, 0x65,         //     USAGE_MAXIMUM (Keyboard Application)             [最大值为键盘应用]
     0x81, 0x00,         //     INPUT (Data,Ary,Abs)                 [按键为输入(相对于主机),传输数据,数组,绝对值]
@@ -202,28 +202,37 @@ const uint8_t JKBD_StdKbdReportDescriptor[JKBD_SIZ_STDKBD_REPORT_DESC] = {
 };
 /** 扩展键盘报告描述符 **/
 const uint8_t JKBD_ExtKbdReportDescriptor[JKBD_SIZ_EXTKBD_REPORT_DESC]= {
-    0x05, 0x0c,                    // USAGE_PAGE (Consumer Devices)
-    0x09, 0x01,                    // USAGE (Consumer Control)
-    0xa1, 0x01,                    // COLLECTION (Application)
-    0xa1, 0x00,                    //   COLLECTION (Physical)
-    0x09, 0xe9,                    //     USAGE (Volume Up)     bit0    01
-    0x09, 0xea,                    //     USAGE (Volume Down)   bit1    02
-    0x09, 0xe2,                    //     USAGE (Mute)          bit2    04
-    0x09, 0xcd,                    //     USAGE (Play/Pause)    bit3    08
-    0x09, 0x6f,                    //     USAGE (Bright Up)     bit4    10
-    0x09, 0x70,                    //     USAGE (Bright Down)   bit5    20
-    0x35, 0x00,                    //     PHYSICAL_MINIMUM (0)
-    0x45, 0x07,                    //     PHYSICAL_MAXIMUM (7)
-    0x15, 0x00,                    //     LOGICAL_MINIMUM (0)
-    0x25, 0x01,                    //     LOGICAL_MAXIMUM (1)
-    0x75, 0x01,                    //     REPORT_SIZE (1)
-    0x95, 0x06,                    //     REPORT_COUNT (6)
-    0x81, 0x02,                    //     INPUT (Data,Var,Abs)
-    0x75, 0x01,                    //     REPORT_SIZE (1)
-    0x95, 0x02,                    //     REPORT_COUNT (2)
-    0x81, 0x01,                    //     INPUT (Cnst,Ary,Abs)
-    0xc0,                          //   END_COLLECTION
-    0xc0                           // END_COLLECTION
+    0x05, 0x0c,			// USAGE_PAGE (Consumer Devices)
+    0x09, 0x01,			// USAGE (Consumer Control)
+    0xa1, 0x01,			// COLLECTION (Application)
+    0x85, 0x01,			//	   REPORT_ID(1)
+    0x09, 0xe9,			//     USAGE (Volume Up)     bit0    01
+    0x09, 0xea,			//     USAGE (Volume Down)   bit1    02
+    0x09, 0xe2,			//     USAGE (Mute)          bit2    04
+    0x09, 0xcd,			//     USAGE (Play/Pause)    bit3    08
+    0x09, 0x6f,			//     USAGE (Bright Up)     bit4    10
+    0x09, 0x70,			//     USAGE (Bright Down)   bit5    20
+    0x15, 0x00,			//     LOGICAL_MINIMUM (0)
+    0x25, 0x01,			//     LOGICAL_MAXIMUM (1)
+    0x75, 0x01,			//     REPORT_SIZE (1)
+    0x95, 0x06,			//     REPORT_COUNT (6)
+    0x81, 0x02,			//     INPUT (Data,Var,Abs)
+    0x75, 0x01,			//     REPORT_SIZE (1)
+    0x95, 0x12,			//     REPORT_COUNT (18)
+    0x81, 0x01,			//     INPUT (Cnst,Ary,Abs)
+    0x85, 0x02,			//	   REPORT_ID(2)
+    0x05, 0x10,			//	   USAGE_PAGE(Unicode)
+    0x1A, 0x00, 0x00,	//     USAGE_MINIMUM(0)
+    0x2A, 0xFF, 0xFF,	//     USAGE_MAXIMUM(65535)
+    0x15, 0x00,			//     LOGICAL_MINIMUM(0)
+    0x27, 0xFF, 0xFF,	//     LOGICAL_MAXIMUM(65535)
+    0x95, 0x01,			//     REPORT_COUNT (1)
+    0x75, 0x10,			//     REPORT_SIZE(16Bit)
+    0x81, 0x02,			//	   INPUT (Data,Var,Abs)
+    0x75, 0x01,			//     REPORT_SIZE (1)
+    0x95, 0x08,			//     REPORT_COUNT (8)
+    0x81, 0x01,			//     INPUT (Cnst,Ary,Abs)
+    0xc0       			// END_COLLECTION
 };
 /**USB字符串描述符(可选)**/
 /* 设备语言*/

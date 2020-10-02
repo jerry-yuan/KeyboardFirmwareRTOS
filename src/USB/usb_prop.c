@@ -181,7 +181,7 @@ void JKBD_Reset(void) {
 
     /* Initialize Endpoint IN 2 */
     SetEPTxAddr(ENDP2,ENDP2_TXADDR);
-    SetEPTxCount(ENDP2, 1);
+    SetEPTxCount(ENDP2, 4);
     SetEPTxStatus(ENDP2, EP_TX_NAK);
 
     /* Initialize Endpoint OUT 2*/

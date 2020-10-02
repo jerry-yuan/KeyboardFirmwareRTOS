@@ -17,7 +17,19 @@ typedef struct {
     uint8_t keys[6];
 } StandardKeyboardReport_t;
 
-typedef uint8_t ConsumerKeyboardReport_t;
+typedef struct{
+	uint8_t keys[2];
+} ConsumerKeyboardReport_t;
+typedef struct{
+	uint8_t unicode[2];
+} UnicodeKeyboardReport_t;
+typedef struct{
+	uint8_t reportId;
+	union {
+		ConsumerKeyboardReport_t consumerReport;
+		UnicodeKeyboardReport_t  unicodeReport;
+	} reportData;
+} ExtendedKeyboardReport_t;
 
 typedef enum{
     StandardKeyboardWorking=0x00,

@@ -54,7 +54,7 @@
 #define JKBD_SIZ_DEVICE_DESC                18
 #define JKBD_SIZ_CONFIG_DESC                73
 #define JKBD_SIZ_STDKBD_REPORT_DESC         60
-#define JKBD_SIZ_EXTKBD_REPORT_DESC			42
+#define JKBD_SIZ_EXTKBD_REPORT_DESC			42-1-4+27
 #define JKBD_SIZ_STRING_LANGID              4
 #define JKBD_SIZ_STRING_VENDOR              38
 #define JKBD_SIZ_STRING_PRODUCT             8
