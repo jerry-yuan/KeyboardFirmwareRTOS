@@ -43,7 +43,7 @@ static HMI_SCREEN_ACTION screenActions= {
 
 HMI_SCREEN_OBJECT SCREEN_Clock_Edit= {SCREEN_Clock_Edit_ID,&screenActions};
 
-const uint8_t daysOfMonth[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+static const uint8_t daysOfMonth[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
 
 static SGUI_NUM_VARBOX_STRUCT*  pstYearBox=NULL;
 static SGUI_NUM_VARBOX_STRUCT*  pstMonthBox=NULL;

@@ -63,5 +63,6 @@ typedef struct {
 
 void mapKeyCodes(KeyUpdateInfo_t* pCurrent,uint32_t* pKeyCode);
 bool containsKey(MappedKeyCodes_t* mappedKeyCodes,uint8_t keyCode);
+bool containsKeys(MappedKeyCodes_t* mappedKeyCodes,uint8_t* pKeyCodeFound,uint8_t checkLength,int keyCode,...);
 
 #endif /* KEYBOARD_H_INCLUDED */

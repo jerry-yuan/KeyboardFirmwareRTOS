@@ -58,7 +58,7 @@ void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,const uint32_t u
 		}
 	}
 	if(stSection.uiFirst>uiCode || stSection.uiLast<uiCode){
-		printf("%04X cannot found in the font base.\n",uiCode);
+		printf("%04X cannot found in the font base.\r\n",uiCode);
 		return;
 	}
 	// 查找这个字的属性

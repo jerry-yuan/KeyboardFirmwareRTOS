@@ -1,4 +1,6 @@
 #include <lib/keyboard.h>
+#include <stdarg.h>
+
 
 const uint32_t keyboardMap[6][21]= {
     //1      2      3      4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21
@@ -37,4 +39,21 @@ bool containsKey(MappedKeyCodes_t* mappedKeyCodes,uint8_t keyCode) {
         }
     }
     return false;
+}
+bool containsKeys(MappedKeyCodes_t* mappedKeyCodes,uint8_t* pKeyCodeFound,uint8_t checkLength,int keyCode,...) {
+    va_list nextCode;
+    va_start(nextCode,keyCode);
+    *pKeyCodeFound = 0;
+	for(int i=0; i<checkLength; i++) {
+		for(int j=0; j<mappedKeyCodes->length; j++) {
+			if((uint8_t)(mappedKeyCodes->keyCodes[j] & 0xFF) == keyCode) {
+				*pKeyCodeFound = keyCode;
+				i=checkLength;
+				break;
+			}
+        }
+        keyCode = va_arg(nextCode,int);
+    }
+    va_end(nextCode);
+    return *pKeyCodeFound!=0;
 }
