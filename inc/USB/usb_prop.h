@@ -54,8 +54,6 @@ void JKBD_init(void);
 void JKBD_Reset(void);
 void JKBD_SetConfiguration(void);
 void JKBD_SetDeviceAddress (void);
-void JKBD_Status_In (void);
-void JKBD_Status_Out (void);
 RESULT JKBD_Data_Setup(uint8_t);
 RESULT JKBD_NoData_Setup(uint8_t);
 RESULT JKBD_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSetting);
@@ -71,15 +69,17 @@ uint8_t *JKBD_GetStdKbdHIDDescriptor(uint16_t Length);
 uint8_t *JKBD_GetExtKbdHIDDescriptor(uint16_t Length);
 
 /* Exported define -----------------------------------------------------------*/
-#define JKBD_GetConfiguration          NOP_Process
+#define JKBD_GetConfiguration          	NOP_Process
 //#define JKBD_SetConfiguration          NOP_Process
-#define JKBD_GetInterface              NOP_Process
-#define JKBD_SetInterface              NOP_Process
-#define JKBD_GetStatus                 NOP_Process
-#define JKBD_ClearFeature              NOP_Process
-#define JKBD_SetEndPointFeature        NOP_Process
-#define JKBD_SetDeviceFeature          NOP_Process
+#define JKBD_GetInterface              	NOP_Process
+#define JKBD_SetInterface              	NOP_Process
+#define JKBD_GetStatus                 	NOP_Process
+#define JKBD_ClearFeature              	NOP_Process
+#define JKBD_SetEndPointFeature       	NOP_Process
+#define JKBD_SetDeviceFeature          	NOP_Process
 //#define JKBD_SetDeviceAddress          NOP_Process
+#define JKBD_Status_In 					NOP_Process
+#define JKBD_Status_Out 				NOP_Process
 
 #define REPORT_DESCRIPTOR                  0x22
 

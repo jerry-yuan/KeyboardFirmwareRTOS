@@ -165,6 +165,7 @@ void USB_Cable_Config (FunctionalState NewState) {
 ******************************************************
 *************************/
 void JKBD_Send(uint8_t* buf,uint8_t len,uint8_t endpoint) {
+	while(GetEPTxStatus(endpoint) != EP_TX_NAK);
     /*copy mouse position info in ENDP1 Tx Packet Memory Area*/
     UserToPMABufferCopy(buf, GetEPTxAddr(endpoint), len);   //
     /* enable endpoint for transmission */

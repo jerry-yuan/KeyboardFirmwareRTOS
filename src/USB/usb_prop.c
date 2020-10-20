@@ -218,23 +218,6 @@ void JKBD_SetConfiguration(void) {
 void JKBD_SetDeviceAddress (void) {
     bDeviceState = ADDRESSED;
 }
-/*******************************************************************************
-* Function Name  : JKBD_Status_In.
-* Description    : Joystick status IN routine.
-* Input          : None.
-* Output         : None.
-* Return         : None.
-*******************************************************************************/
-void JKBD_Status_In(void) {}
-
-/*******************************************************************************
-* Function Name  : JKBD_Status_Out
-* Description    : Joystick status OUT routine.
-* Input          : None.
-* Output         : None.
-* Return         : None.
-*******************************************************************************/
-void JKBD_Status_Out (void) {}
 
 /*******************************************************************************
 * Function Name  : JKBD_Data_Setup
@@ -358,7 +341,7 @@ uint8_t *JKBD_GetConfigDescriptor(uint16_t Length) {
 *******************************************************************************/
 uint8_t *JKBD_GetStringDescriptor(uint16_t Length) {
     uint8_t wValue0 = pInformation->USBwValue0;
-    if (wValue0 > 4) {
+    if (wValue0 > sizeof(String_Descriptor)/sizeof(ONE_DESCRIPTOR)) {
         return NULL;
     } else {
         return Standard_GetDescriptorData(Length, &String_Descriptor[wValue0]);
