@@ -16,7 +16,7 @@
 
 #define CKEY        0x0100
 
-enum KeyboardUsageCode {
+typedef enum {
     KeyEmpty=0x00,
     KeyErrorRollOver,KeyPOSTFail,KeyErrorUndefined,
     KeyA,KeyB,KeyC,KeyD,KeyE,KeyF,KeyG,KeyH,KeyI,KeyJ,KeyK,KeyL,KeyM,
@@ -53,7 +53,7 @@ enum KeyboardUsageCode {
     KeyNumMemoryStore,KeyNumMemoryReset,KeyNumMemoryAdd,KeyNumMemorySubtract,KeyNumMemoryMultiply,KeyNumMemoryDivide,
     KeyNumNegativeSwitch,KeyNumClear,KeyNumClearEntry,
     KeyNumBinary,KeyNumOctal,KeyNumDecimal,KeyNumHexadecimal
-};
+} KeyboardUsageCode_t;
 
 typedef struct {
     uint8_t   length;
@@ -62,7 +62,7 @@ typedef struct {
 } MappedKeyCodes_t;
 
 void mapKeyCodes(KeyUpdateInfo_t* pCurrent,uint32_t* pKeyCode);
-bool containsKey(MappedKeyCodes_t* mappedKeyCodes,uint8_t keyCode);
-bool containsKeys(MappedKeyCodes_t* mappedKeyCodes,uint8_t* pKeyCodeFound,uint8_t checkLength,int keyCode,...);
+bool containsKey(MappedKeyCodes_t* mappedKeyCodes,KeyboardUsageCode_t keyCode);
+bool containsKeys(MappedKeyCodes_t* mappedKeyCodes,KeyboardUsageCode_t* pKeyCodeFound,uint8_t checkLength,KeyboardUsageCode_t keyCode,...);
 
 #endif /* KEYBOARD_H_INCLUDED */

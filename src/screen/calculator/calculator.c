@@ -4,6 +4,8 @@
 #include <stdio.h>
 
 #include <SGUI_Basic.h>
+#include <SGUI_Notice.h>
+#include <SGUI_IconResource.h>
 #include <screen/calculator/calculator.h>
 
 #include <lib/keyboard.h>
@@ -14,52 +16,53 @@
 #define DISPLAY_BUFFER_SIZE			20
 
 #define ACTION_MASK_REFRESH 	0x80
-#define ACTION_MASK_INPUT		0x40
-#define ACTION_MASK_CALCULATE 	0x20
 
-#define FLAG_MASK_HAS_DOT		0x01
-#define FLAG_MASK_HAS_RESULT 	0x02
-#define FLAG_MASK_HAS_ERROR		0x04
-#define FLAG_MASK_PREV_CALC		0xF0
+typedef struct {
+    int64_t iValue;
+    uint8_t uiShift;
+} AccurateFloatNumber_t;
 
-#define FLAG_CALC_EQUALS		0x00
-#define FLAG_CALC_DIVIDE		0x10
-#define FLAG_CALC_MULTIPLY		0x20
-#define FLAG_CALC_MINUS			0x30
-#define FLAG_CALC_PLUS			0x40
+typedef enum {
+	NoOperate   = 0x00,
+    Divide 		= 0x01,
+    Multiply 	= 0x02,
+    Minus 		= 0x03,
+    Plus 		= 0x04,
+    Equals		= 0x05
+} CalculateAction_t ;
 
+typedef enum {
+    InitialState = 0x00,
+    InputState   = 0x01,
+    ResultState  = 0x02,
+    ErrorState   = 0x03,
+} CalculatorStates_t;
+
+typedef struct {
+    char* pcBuffer;
+    char* pcBufferCursor;
+    CalculateAction_t ePrevAction;
+    AccurateFloatNumber_t stPrevNumber;
+    CalculatorStates_t eState;
+    const char* pcLastError;
+    void (*pfActionHandlers[4])(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID);
+    void (*pfRenders[4])(SGUI_SCR_DEV* pstDeviceIF);
+    void (*pfDoCalcAction[6])(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage);
+} CalculatorStateMachine_t;
 
 enum {
     NoAction      = 0x00,
     GoBack        = 0x01,
     RefreshScreen = 0x80,
-
-    DoBackSpace   = 0x81,
-    DoClear		  = 0x82,
-
-    DoDivide	  = 0xA0,
-    DoMultipy     = 0xA1,
-    DoMinus		  = 0xA2,
-    DoPlus	      = 0xA3,
-    DoEquals      = 0xA4,
-
-    Input0		  = 0xC0,
-    Input1		  = 0xC1,
-    Input2		  = 0xC2,
-    Input3		  = 0xC3,
-    Input4		  = 0xC4,
-    Input5		  = 0xC5,
-    Input6		  = 0xC6,
-    Input7		  = 0xC7,
-    Input8		  = 0xC8,
-    Input9		  = 0xC9,
-    InputDot	  = 0xCA
+    ResetCalc	  = 0x81
 };
 
-static char* pcBuffer 					= NULL;
+static CalculatorStateMachine_t* pstStateMachine	= NULL;
+
+/*static char* pcBuffer 					= NULL;
 static char* pcBufferCursor 			= NULL;
 static uint8_t uiFlags					= 0x00;
-static AccurateFloatNumber_t* pstResult = NULL;
+static AccurateFloatNumber_t* pstResult = NULL;*/
 
 static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF);
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters);
@@ -67,15 +70,29 @@ static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParam
 static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID);
 static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID);
 
+static void initialStateRender(SGUI_SCR_DEV* pstDeviceIF);
+static void resultStateRender(SGUI_SCR_DEV* pstDeviceIF);
+static void inputStateRender(SGUI_SCR_DEV* pstDeviceIF);
+static void errorStateRender(SGUI_SCR_DEV* pstDeviceIF);
+
+static void initialStateHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID);
+static void resultStateHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID);
+static void inputStateHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID);
+static void errorStateHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID);
+
+static void resetCalculator();
+
 static void strToNumber(char* pBuffer,AccurateFloatNumber_t* pstNumber);
 static void numberToStr(char* pBuffer,AccurateFloatNumber_t* pstNumber);
 static void reverseStr(char* pBuffer,uint8_t from,uint8_t to);
 static void alineNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB);
 static void simplifyNumber(AccurateFloatNumber_t* pstNumber);
-static void addNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB);
-static void minusNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB);
-static void multiplyNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB);
-static void divideNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB);
+
+static void plusCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage);
+static void minusCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage);
+static void multiplyCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage);
+static void divideCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage);
+static void equalsCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage);
 
 static HMI_SCREEN_ACTION screenActions= {
     Initialize,
@@ -88,62 +105,90 @@ static HMI_SCREEN_ACTION screenActions= {
 HMI_SCREEN_OBJECT SCREEN_Calculator= {SCREEN_Calculator_ID,&screenActions};
 
 HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
-    pstResult = pvPortMalloc(sizeof(AccurateFloatNumber_t));
-    pcBuffer = pvPortMalloc(sizeof(char)*INPUT_BUFFER_SIZE);
-    pcBufferCursor = pcBuffer;
-    memset(pcBuffer,0,sizeof(char)*INPUT_BUFFER_SIZE);
+    pstStateMachine = pvPortMalloc(sizeof(CalculatorStateMachine_t));
+    memset(pstStateMachine,0,sizeof(CalculatorStateMachine_t));
+
+    pstStateMachine->pcBuffer 		= pvPortMalloc(sizeof(char)*INPUT_BUFFER_SIZE);
+    pstStateMachine->pcBufferCursor = pstStateMachine->pcBuffer;
+    memset(pstStateMachine->pcBuffer,0,sizeof(char)*INPUT_BUFFER_SIZE);
+
+    pstStateMachine->pfRenders[InitialState] = initialStateRender;
+    pstStateMachine->pfRenders[ResultState]  = resultStateRender;
+    pstStateMachine->pfRenders[InputState]   = inputStateRender;
+    pstStateMachine->pfRenders[ErrorState]   = errorStateRender;
+
+    pstStateMachine->pfActionHandlers[InitialState] = initialStateHandler;
+    pstStateMachine->pfActionHandlers[ResultState]  = resultStateHandler;
+    pstStateMachine->pfActionHandlers[InputState]   = inputStateHandler;
+    pstStateMachine->pfActionHandlers[ErrorState]   = errorStateHandler;
+
+	pstStateMachine->pfDoCalcAction[NoOperate] = equalsCalcAction;
+    pstStateMachine->pfDoCalcAction[Divide] = divideCalcAction;
+    pstStateMachine->pfDoCalcAction[Multiply] = multiplyCalcAction;
+    pstStateMachine->pfDoCalcAction[Minus] = minusCalcAction;
+    pstStateMachine->pfDoCalcAction[Plus] = plusCalcAction;
+    pstStateMachine->pfDoCalcAction[Equals] = equalsCalcAction;
+
+
+    resetCalculator();
+
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
     SGUI_Basic_ClearScreen(pstDeviceIF);
+
+	resetCalculator();
+
     Refresh(pstDeviceIF,NULL);
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
-    char cToDisplay[DISPLAY_BUFFER_SIZE]= {0};
-
-    const char* cOperators[5]= {"=","÷","×","-","+"};
-    const char* cOperator = "";
-    SGUI_RECT stRect;
-    SGUI_POINT stPoint;
-    SGUI_AREA_SIZE stArea;
-
     SGUI_Basic_DrawRectangle(pstDeviceIF,5,5,256-10,64-10,0x0A,0x00);
-
-    stPoint.iX=stPoint.iY=0;
-	if(uiFlags & FLAG_MASK_HAS_ERROR){
-		stRect.iX = 10;
-		stRect.iY = 10;
-		stRect.iHeight = 44;
-		stRect.iWidth  = 246;
-		SGUI_Text_DrawMultipleLinesText(pstDeviceIF,"产生错误:\n请检查是不是他喵的除了个0?",SGUI_FONT_REF(Deng12),&stRect,0,0x0F);
-		return HMI_RET_NORMAL;
-	} else if(pcBuffer!=pcBufferCursor) {
-        sprintf(cToDisplay,"%s%c",pcBuffer,uiFlags&FLAG_MASK_HAS_DOT?'\0':'.');
-    } else if(uiFlags & FLAG_MASK_HAS_RESULT) {
-        numberToStr(cToDisplay,pstResult);
-        cOperator=cOperators[((uiFlags & FLAG_MASK_PREV_CALC)>>4) & 0x0f];
-    } else {
-        sprintf(cToDisplay,"0.");
-    }
-    SGUI_Text_GetTextExtent(cToDisplay,SGUI_FONT_REF(LCD44),&stArea);
-    stRect.iX = 236 - stArea.iWidth;
-    stRect.iY = 10;
-    stRect.iHeight = stArea.iHeight;
-    stRect.iWidth  = stArea.iWidth;
-    SGUI_Text_DrawText(pstDeviceIF,cToDisplay,SGUI_FONT_REF(LCD44),&stRect,&stPoint,0x0F);
-    SGUI_Text_GetTextExtent(cOperator,SGUI_FONT_REF(LCD44),&stArea);
-    stRect.iX = stRect.iY = 10;
-    stRect.iHeight = stArea.iHeight;
-    stRect.iWidth  = stArea.iWidth;
-    SGUI_Text_DrawText(pstDeviceIF,cOperator,SGUI_FONT_REF(LCD44),&stRect,&stPoint,0x0F);
-
+    pstStateMachine->pfRenders[pstStateMachine->eState](pstDeviceIF);
     return HMI_RET_NORMAL;
+//    char cToDisplay[DISPLAY_BUFFER_SIZE]= {0};
+//
+//    const char* cOperators[5]= {"=","÷","×","-","+"};
+//    const char* cOperator = "";
+//    SGUI_RECT stRect;
+//    SGUI_POINT stPoint;
+//    SGUI_AREA_SIZE stArea;
+//
+//    SGUI_Basic_DrawRectangle(pstDeviceIF,5,5,256-10,64-10,0x0A,0x00);
+//
+//    stPoint.iX=stPoint.iY=0;
+//    if(uiFlags & FLAG_MASK_HAS_ERROR) {
+//        stRect.iX = 10;
+//        stRect.iY = 10;
+//        stRect.iHeight = 44;
+//        stRect.iWidth  = 246;
+//        SGUI_Text_DrawMultipleLinesText(pstDeviceIF,"产生错误:\n请检查是不是他喵的除了个0?",SGUI_FONT_REF(Deng12),&stRect,0,0x0F);
+//        return HMI_RET_NORMAL;
+//    } else if(pcBuffer!=pcBufferCursor) {
+//        sprintf(cToDisplay,"%s%c",pcBuffer,uiFlags&FLAG_MASK_HAS_DOT?'\0':'.');
+//    } else if(uiFlags & FLAG_MASK_HAS_RESULT) {
+//        numberToStr(cToDisplay,pstResult);
+//        cOperator=cOperators[((uiFlags & FLAG_MASK_PREV_CALC)>>4) & 0x0f];
+//    } else {
+//        sprintf(cToDisplay,"0.");
+//    }
+//    SGUI_Text_GetTextExtent(cToDisplay,SGUI_FONT_REF(LCD44),&stArea);
+//    stRect.iX = 236 - stArea.iWidth;
+//    stRect.iY = 10;
+//    stRect.iHeight = stArea.iHeight;
+//    stRect.iWidth  = stArea.iWidth;
+//    SGUI_Text_DrawText(pstDeviceIF,cToDisplay,SGUI_FONT_REF(LCD44),&stRect,&stPoint,0x0F);
+//    SGUI_Text_GetTextExtent(cOperator,SGUI_FONT_REF(LCD44),&stArea);
+//    stRect.iX = stRect.iY = 10;
+//    stRect.iHeight = stArea.iHeight;
+//    stRect.iWidth  = stArea.iWidth;
+//    SGUI_Text_DrawText(pstDeviceIF,cOperator,SGUI_FONT_REF(LCD44),&stRect,&stPoint,0x0F);
+//
+//    return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
     KEY_EVENT* pstKeyEvent;
     MappedKeyCodes_t stPressed,stRelease;
-    uint8_t keyCode;
     *piActionID = NoAction;
     if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)) {
         pstKeyEvent = (KEY_EVENT*)pstEvent;
@@ -156,24 +201,31 @@ HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* p
         stRelease.length	= pstKeyEvent->Data.uiReleaseCount;
         stRelease.keyCodes	= pvPortMalloc(sizeof(uint32_t)*stRelease.length);
         mapKeyCodes(pstKeyEvent->Data.pstRelease,stRelease.keyCodes);
-
-        if(stPressed.keyCodes[0]<=Key0 && stPressed.keyCodes[0]>=Key1) {
-            *piActionID = ACTION_MASK_INPUT | ACTION_MASK_REFRESH | (((stPressed.keyCodes[0]-Key1 + 1)%10)&0x0F);
-        } else if(stPressed.keyCodes[0]<=KeyNum0 && stPressed.keyCodes[0]>=KeyNum1) {
-            *piActionID = ACTION_MASK_INPUT | ACTION_MASK_REFRESH | (((stPressed.keyCodes[0]-KeyNum1 + 1)%10)&0x0F);
-        } else if(containsKeys(&stPressed,&keyCode,2,KeyDot,KeyNumDelete)) {
-            *piActionID = InputDot;
-        } else if(containsKeys(&stPressed,&keyCode,2,KeyDelete,KeyDeleteForward)) {
-            *piActionID = DoBackSpace;
-        } else if(stPressed.keyCodes[0]<=KeyNumEnter && stPressed.keyCodes[0]>=KeyNumSlash) {
-            *piActionID = ACTION_MASK_CALCULATE | ACTION_MASK_REFRESH | ((stPressed.keyCodes[0]-KeyNumSlash)&0x0F);
-        } else if(containsKey(&stPressed,KeyEnter)) {
-            *piActionID = DoEquals;
-        } else if(containsKey(&stPressed,KeyNumLock)) {
-            *piActionID = DoClear;
+        if(containsKey(&stPressed,KeyNumLock)) {
+            *piActionID = ResetCalc;
         } else if(containsKey(&stRelease,KeyEscape)) {
             *piActionID = GoBack;
+        } else {
+            pstStateMachine -> pfActionHandlers[pstStateMachine->eState](&stPressed,&stRelease,piActionID);
         }
+
+//        if(stPressed.keyCodes[0]<=Key0 && stPressed.keyCodes[0]>=Key1) {
+//            *piActionID = ACTION_MASK_INPUT | ACTION_MASK_REFRESH | (((stPressed.keyCodes[0]-Key1 + 1)%10)&0x0F);
+//        } else if(stPressed.keyCodes[0]<=KeyNum0 && stPressed.keyCodes[0]>=KeyNum1) {
+//            *piActionID = ACTION_MASK_INPUT | ACTION_MASK_REFRESH | (((stPressed.keyCodes[0]-KeyNum1 + 1)%10)&0x0F);
+//        } else if(containsKeys(&stPressed,&keyCode,2,KeyDot,KeyNumDelete)) {
+//            *piActionID = InputDot;
+//        } else if(containsKeys(&stPressed,&keyCode,2,KeyDelete,KeyDeleteForward)) {
+//            *piActionID = DoBackSpace;
+//        } else if(stPressed.keyCodes[0]<=KeyNumEnter && stPressed.keyCodes[0]>=KeyNumSlash) {
+//            *piActionID = ACTION_MASK_CALCULATE | ACTION_MASK_REFRESH | ((stPressed.keyCodes[0]-KeyNumSlash)&0x0F);
+//        } else if(containsKey(&stPressed,KeyEnter)) {
+//            *piActionID = DoEquals;
+//        } else if(containsKey(&stPressed,KeyNumLock)) {
+//            *piActionID = DoClear;
+//        } else if(containsKey(&stRelease,KeyEscape)) {
+//            *piActionID = GoBack;
+//        }
 
         vPortFree(stPressed.keyCodes);
         vPortFree(stRelease.keyCodes);
@@ -182,98 +234,178 @@ HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* p
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID) {
-    AccurateFloatNumber_t stNumber= {0,0};
-    if(iActionID & ACTION_MASK_INPUT) {
-        if(pcBufferCursor-pcBuffer < INPUT_BUFFER_SIZE - ((uiFlags & FLAG_MASK_HAS_DOT)?0:1)) {
-            if(iActionID == InputDot) {
-                if(!(uiFlags & FLAG_MASK_HAS_DOT)) {
-                    uiFlags |= FLAG_MASK_HAS_DOT;
-                    if(pcBufferCursor == pcBuffer){
-						*pcBufferCursor++ = '0';
-                    }
-                    *pcBufferCursor++ = '.';
-                }
-            } else if(iActionID == Input0) {
-				if(pcBuffer!=pcBufferCursor) {
-                    *pcBufferCursor++ = '0';
-                }
-            }else{
-                *pcBufferCursor++ = '0'+(iActionID & 0x0F);
-            }
-            *pcBufferCursor = '\0';
-        }
-    } else if(iActionID & ACTION_MASK_CALCULATE) {
-        if(pcBufferCursor>pcBuffer) {
-			// 输入缓冲有数据  ==> 参与计算
-            strToNumber(pcBuffer,&stNumber);
-            *(pcBufferCursor = pcBuffer) = '\0';
-            uiFlags   &= ~FLAG_MASK_HAS_DOT;
-
-            if(!(uiFlags & FLAG_MASK_HAS_RESULT) || (uiFlags & FLAG_MASK_PREV_CALC) == FLAG_CALC_EQUALS) {
-                // 没有临时数据  ==> 将数据放到临时区域
-                *pstResult = stNumber;
-                uiFlags   |= FLAG_MASK_HAS_RESULT;
-            } else {
-                // 有临时数据    ==> 执行上一个计算并放到临时区域
-                uiFlags   |= FLAG_MASK_HAS_RESULT;
-                if((uiFlags & FLAG_MASK_PREV_CALC) == FLAG_CALC_PLUS) {
-                    // 加法
-                    addNumber(pstResult,&stNumber);
-                    //dbTempResult += dbNumber;
-                } else if((uiFlags & FLAG_MASK_PREV_CALC) == FLAG_CALC_MINUS) {
-                    // 减法
-                    minusNumber(pstResult,&stNumber);
-                    //dbTempResult -= dbNumber;
-                } else if((uiFlags & FLAG_MASK_PREV_CALC) == FLAG_CALC_MULTIPLY) {
-                    // 乘法
-                    multiplyNumber(pstResult,&stNumber);
-                    //dbTempResult *= dbNumber;
-                } else if((uiFlags & FLAG_MASK_PREV_CALC) == FLAG_CALC_DIVIDE) {
-                    // 除法
-                    if(stNumber.iValue != 0) {
-                        //dbTempResult /= dbNumber;
-                        divideNumber(pstResult,&stNumber);
-                    } else {
-                        uiFlags |= FLAG_MASK_HAS_ERROR;
-                    }
-                }
-            }
-        }
-
-        // 计算结束
-        if(uiFlags & FLAG_MASK_HAS_ERROR) {
-            // 计算异常
-            uiFlags &= ~FLAG_MASK_HAS_RESULT;
-        } else {
-            // 计算正常 ==> 保存下一次要进行的操作
-            uiFlags = ((((iActionID & 0x0F) +1)%5) << 4) | (uiFlags & 0x0F);
-            if(iActionID != DoEquals){
-				uiFlags |= FLAG_MASK_HAS_RESULT;
-            }
-        }
-    } else if(iActionID == DoBackSpace) {
-        if(pcBufferCursor > pcBuffer) {
-            pcBufferCursor --;
-            if(*pcBufferCursor == '.') {
-                uiFlags &= ~FLAG_MASK_HAS_DOT;
-            }
-            *pcBufferCursor = '\0';
-        }
-    } else if(iActionID == DoClear) {
-        uiFlags = 0x00;
-        pstResult->iValue = 0;
-        pstResult->uiShift = 0;
-        pcBufferCursor = pcBuffer;
-        *pcBuffer = '\0';
+    if(iActionID==GoBack) {
+        HMI_GoBack(NULL);
+    } else if(iActionID == ResetCalc) {
+        resetCalculator();
     }
     if(iActionID & ACTION_MASK_REFRESH) {
         Refresh(pstDeviceIF,NULL);
     }
-    if(iActionID==GoBack) {
-        HMI_GoBack(NULL);
+    return HMI_RET_NORMAL;
+}
+
+static void initialStateRender(SGUI_SCR_DEV* pstDeviceIF) {
+    SGUI_RECT stRect;
+    SGUI_POINT stPoint;
+    SGUI_AREA_SIZE stArea;
+
+    SGUI_Text_GetTextExtent("0.",SGUI_FONT_REF(LCD44),&stArea);
+    stPoint.iX = stPoint.iY = 0;
+    stRect.iX = 236-stArea.iWidth;
+    stRect.iY = 10;
+    stRect.iHeight = stArea.iHeight;
+    stRect.iWidth  = stArea.iWidth;
+    SGUI_Text_DrawText(pstDeviceIF,"0.",SGUI_FONT_REF(LCD44),&stRect,&stPoint,0x0F);
+}
+static void resultStateRender(SGUI_SCR_DEV* pstDeviceIF) {
+    SGUI_RECT stRect;
+    SGUI_POINT stPoint;
+    SGUI_AREA_SIZE stArea;
+    char pcBuffer[DISPLAY_BUFFER_SIZE]= {0};
+    const char* operators[]= {"","÷","×","-","+","="};
+
+    stPoint.iX = stPoint.iY = 0;
+
+    numberToStr(pcBuffer,&pstStateMachine->stPrevNumber);
+
+    // draw number
+    SGUI_Text_GetTextExtent(pcBuffer,SGUI_FONT_REF(LCD44),&stArea);
+    stRect.iX = 236-stArea.iWidth;
+    stRect.iY = 10;
+    stRect.iHeight = stArea.iHeight;
+    stRect.iWidth  = stArea.iWidth;
+    SGUI_Text_DrawText(pstDeviceIF,pcBuffer,SGUI_FONT_REF(LCD44),&stRect,&stPoint,0x0F);
+    // draw Operator
+
+    SGUI_Text_GetTextExtent(operators[pstStateMachine->ePrevAction],SGUI_FONT_REF(LCD44),&stArea);
+    stRect.iX = 10;
+    stRect.iY = 10;
+    stRect.iHeight = stArea.iHeight;
+    stRect.iWidth  = stArea.iWidth;
+    SGUI_Text_DrawText(pstDeviceIF,operators[pstStateMachine->ePrevAction],SGUI_FONT_REF(LCD44),&stRect,&stPoint,0x0F);
+}
+static void inputStateRender(SGUI_SCR_DEV* pstDeviceIF) {
+    SGUI_RECT stRect;
+    SGUI_POINT stPoint;
+    SGUI_AREA_SIZE stArea;
+    char cBuffer[DISPLAY_BUFFER_SIZE]= "0.";
+    if(pstStateMachine->pcBuffer != pstStateMachine->pcBufferCursor) {
+        sprintf(cBuffer,"%s%s",pstStateMachine->pcBuffer,strstr(pstStateMachine->pcBuffer,".")?"":".");
     }
 
-    return HMI_RET_NORMAL;
+    SGUI_Text_GetTextExtent(cBuffer,SGUI_FONT_REF(LCD44),&stArea);
+    stPoint.iX = stPoint.iY = 0;
+    stRect.iX = 236-stArea.iWidth;
+    stRect.iY = 10;
+    stRect.iHeight = stArea.iHeight;
+    stRect.iWidth  = stArea.iWidth;
+    SGUI_Text_DrawText(pstDeviceIF,cBuffer,SGUI_FONT_REF(LCD44),&stRect,&stPoint,0x0F);
+}
+static void errorStateRender(SGUI_SCR_DEV* pstDeviceIF) {
+    SGUI_NOTICE_BOX stNoticeBox;
+    stNoticeBox.pstIcon = &SGUI_RES_ICON_ERROR_16;
+    stNoticeBox.cszNoticeText = pstStateMachine->pcLastError;
+    stNoticeBox.stPalette.eEdgeColor = 0x0F;
+    stNoticeBox.stPalette.eFillColor = 0x02;
+    stNoticeBox.stPalette.eTextColor = 0x0F;
+    stNoticeBox.stPalette.uiDepthBits = 4;
+    stNoticeBox.stLayout.iX = 10;
+    stNoticeBox.stLayout.iY = 10;
+    stNoticeBox.stLayout.iWidth = 256-20;
+    stNoticeBox.stLayout.iHeight = 64-20;
+    SGUI_Notice_Repaint(pstDeviceIF,&stNoticeBox,SGUI_FONT_REF(Deng12),0);
+}
+
+static void initialStateHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
+    KeyboardUsageCode_t keyCode;
+    if((pstPressed->keyCodes[0]<=Key0 && pstPressed->keyCodes[0]>=Key1) || (pstPressed->keyCodes[0]<=KeyNum0 && pstPressed->keyCodes[0]>=KeyNum1) || containsKeys(pstPressed,&keyCode,2,KeyDot,KeyNumDelete)) {
+        pstStateMachine -> eState = InputState;
+        inputStateHandler(pstPressed,pstRelease,piActionID);
+    } else if(pstPressed->keyCodes[0]<=KeyNumEnter && pstPressed->keyCodes[0]>=KeyNumSlash) {
+        pstStateMachine -> eState = ResultState;
+        pstStateMachine -> ePrevAction = pstPressed->keyCodes[0] - KeyNumSlash+1;
+        *piActionID = RefreshScreen;
+    }
+}
+static void resultStateHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
+    KeyboardUsageCode_t keyCode;
+    if(pstPressed->keyCodes[0]<=KeyNumEnter && pstPressed->keyCodes[0]>=KeyNumSlash) {
+        pstStateMachine->ePrevAction = pstPressed->keyCodes[0] - KeyNumSlash+1;
+        *piActionID = RefreshScreen;
+    } else if((pstPressed->keyCodes[0]<=Key0 && pstPressed->keyCodes[0]>=Key1) || (pstPressed->keyCodes[0]<=KeyNum0 && pstPressed->keyCodes[0]>=KeyNum1) || containsKeys(pstPressed,&keyCode,2,KeyDot,KeyNumDelete)) {
+        pstStateMachine->eState = InputState;
+        inputStateHandler(pstPressed,pstRelease,piActionID);
+    }
+}
+static void inputStateHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
+    char nextChar = '\0';
+    KeyboardUsageCode_t keyCode;
+    const char* pcErrorMessage=NULL;
+    AccurateFloatNumber_t stNumber;
+    if(pstPressed->keyCodes[0]<=KeyNumEnter && pstPressed->keyCodes[0]>=KeyNumSlash) {
+        strToNumber(pstStateMachine->pcBuffer,&stNumber);
+        *(pstStateMachine->pcBufferCursor = pstStateMachine->pcBuffer) = '\0';
+
+        pstStateMachine->pfDoCalcAction[pstStateMachine->ePrevAction](&pstStateMachine->stPrevNumber,&stNumber,&pcErrorMessage);
+        if(pcErrorMessage==NULL) {
+            pstStateMachine->eState      = ResultState;
+            pstStateMachine->ePrevAction = pstPressed->keyCodes[0]-KeyNumSlash+1;
+        } else {
+            pstStateMachine->eState      = ErrorState;
+            pstStateMachine->pcLastError = pcErrorMessage;
+        }
+
+        *piActionID = RefreshScreen;
+    } else {
+        if(pstPressed->keyCodes[0]<=Key0 && pstPressed->keyCodes[0]>=Key1) {
+            nextChar = '0'+(pstPressed->keyCodes[0]-Key1+1)%10;
+        } else if(pstPressed->keyCodes[0]<=KeyNum0 && pstPressed->keyCodes[0]>=KeyNum1) {
+            nextChar = '0'+(pstPressed->keyCodes[0]-KeyNum1+1)%10;
+        } else if(containsKeys(pstPressed,&keyCode,2,KeyDot,KeyNumDelete)) {
+            nextChar = '.';
+        } else if(containsKeys(pstPressed,&keyCode,2,KeyDelete,KeyDeleteForward)) {
+            nextChar = '\b';
+        }
+        if(nextChar != '\0') {
+            if(nextChar == '\b') {
+                if(pstStateMachine->pcBufferCursor>pstStateMachine->pcBuffer) {
+                    pstStateMachine->pcBufferCursor--;
+                }
+            } else {
+                if(pstStateMachine->pcBufferCursor - pstStateMachine->pcBuffer < INPUT_BUFFER_SIZE) {
+                    if(nextChar == '.') {
+                        if(strchr(pstStateMachine->pcBuffer,'.') == NULL) {
+                            if(pstStateMachine->pcBufferCursor == pstStateMachine->pcBuffer) {
+                                *pstStateMachine->pcBufferCursor++ = '0';
+                            }
+                            *pstStateMachine->pcBufferCursor++ = '.';
+                        }
+                    } else if(nextChar == '0') {
+                        if(pstStateMachine->pcBuffer!=pstStateMachine->pcBufferCursor) {
+                            *pstStateMachine->pcBufferCursor++ = '0';
+                        }
+                    } else {
+                        *pstStateMachine->pcBufferCursor++ = nextChar;
+                    }
+                }
+            }
+            *pstStateMachine->pcBufferCursor='\0';
+            *piActionID = RefreshScreen;
+        }
+    }
+
+}
+static void errorStateHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
+
+}
+
+static void resetCalculator() {
+    pstStateMachine->eState       			= InitialState;
+    pstStateMachine->ePrevAction			= NoOperate;
+    pstStateMachine->stPrevNumber.iValue  	= 0;
+    pstStateMachine->stPrevNumber.uiShift 	= 0;
+    *(pstStateMachine->pcBufferCursor 		= pstStateMachine->pcBuffer)='\0';
 }
 
 static void strToNumber(char* pBuffer,AccurateFloatNumber_t* pstNumber) {
@@ -358,53 +490,62 @@ static void alineNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t*
         pstNumberB->uiShift = pstNumberA->uiShift;
     }
 }
-static void addNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB) {
+
+static void plusCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage) {
     alineNumber(pstNumberA,pstNumberB);
     pstNumberA->iValue += pstNumberB->iValue;
     simplifyNumber(pstNumberA);
     simplifyNumber(pstNumberB);
 }
-static void minusNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB) {
+static void minusCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage) {
     alineNumber(pstNumberA,pstNumberB);
     pstNumberA -> iValue -= pstNumberB->iValue;
     simplifyNumber(pstNumberA);
     simplifyNumber(pstNumberB);
 }
-static void multiplyNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB) {
-	pstNumberA -> iValue  *= pstNumberB->iValue;
-	pstNumberA -> uiShift += pstNumberB->uiShift;
-	simplifyNumber(pstNumberA);
+static void multiplyCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage) {
+    pstNumberA -> iValue  *= pstNumberB->iValue;
+    pstNumberA -> uiShift += pstNumberB->uiShift;
+    simplifyNumber(pstNumberA);
 }
-static void divideNumber(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB) {
-	double dbNumberA = pstNumberA->iValue;
-	double dbNumberB = pstNumberB->iValue;
-	uint8_t isNegative=0;
-	uint8_t uiIntegerLength = 0;
-	// 转换为double
-	for(uint8_t i=0;i<pstNumberA->uiShift;i++){
-		dbNumberA /= 10.0;
-	}
-	for(uint8_t i=0;i<pstNumberB->uiShift;i++){
-		dbNumberB /= 10.0;
-	}
-	// 运算
-	dbNumberA /= dbNumberB;
-	// 转换回Number
-	isNegative = dbNumberA <0 ? 1: 0;
-	pstNumberA->uiShift =0;
-	pstNumberA->iValue = (int64_t)dbNumberA;
-	while(pstNumberA->iValue>0){
-		pstNumberA->iValue /= 10;
-		uiIntegerLength++;
-	}
-	pstNumberA->iValue = (int64_t)dbNumberA;
-	dbNumberA -= pstNumberA->iValue;
-	while(uiIntegerLength<9){
-		dbNumberA *= 10;
-		pstNumberA->iValue = pstNumberA->iValue*10 + ((uint8_t)dbNumberA) * (isNegative?-1:1);
-		dbNumberA -= (uint8_t)dbNumberA;
-		pstNumberA->uiShift ++;
-		uiIntegerLength ++;
-	}
-	simplifyNumber(pstNumberA);
+static void divideCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage) {
+    double dbNumberA = pstNumberA->iValue;
+    double dbNumberB = pstNumberB->iValue;
+    uint8_t isNegative=0;
+    uint8_t uiIntegerLength = 0;
+    // 转换为double
+    for(uint8_t i=0; i<pstNumberA->uiShift; i++) {
+        dbNumberA /= 10.0;
+    }
+    for(uint8_t i=0; i<pstNumberB->uiShift; i++) {
+        dbNumberB /= 10.0;
+    }
+    if(dbNumberB>=(-1e-6)&&dbNumberB<=(1e-6)) {
+        *ppcErrorMessage = "你他喵的是不是除了个0?";
+        return;
+    }
+    // 运算
+    dbNumberA /= dbNumberB;
+    // 转换回Number
+    isNegative = dbNumberA <0 ? 1: 0;
+    pstNumberA->uiShift =0;
+    pstNumberA->iValue = (int64_t)dbNumberA;
+    while(pstNumberA->iValue>0) {
+        pstNumberA->iValue /= 10;
+        uiIntegerLength++;
+    }
+    pstNumberA->iValue = (int64_t)dbNumberA;
+    dbNumberA -= pstNumberA->iValue;
+    while(uiIntegerLength<9) {
+        dbNumberA *= 10;
+        pstNumberA->iValue = pstNumberA->iValue*10 + ((uint8_t)dbNumberA) * (isNegative?-1:1);
+        dbNumberA -= (uint8_t)dbNumberA;
+        pstNumberA->uiShift ++;
+        uiIntegerLength ++;
+    }
+    simplifyNumber(pstNumberA);
+}
+static void equalsCalcAction(AccurateFloatNumber_t* pstNumberA,AccurateFloatNumber_t* pstNumberB,const char** ppcErrorMessage) {
+    pstNumberA->iValue = pstNumberB->iValue;
+    pstNumberA->uiShift = pstNumberB->uiShift;
 }
