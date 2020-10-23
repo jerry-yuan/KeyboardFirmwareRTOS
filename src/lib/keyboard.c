@@ -32,21 +32,21 @@ void mapKeyCodes(KeyUpdateInfo_t* pCurrent,uint32_t* pKeyCode) {
     }
 }
 
-bool containsKey(MappedKeyCodes_t* mappedKeyCodes,uint8_t keyCode) {
+bool containsKey(MappedKeyCodes_t* mappedKeyCodes,KeyboardUsageCode_t keyCode) {
     for(int i=0; i<mappedKeyCodes->length; i++) {
-        if((uint8_t)(mappedKeyCodes->keyCodes[i] & 0xFF) == keyCode) {
+        if((KeyboardUsageCode_t)(mappedKeyCodes->keyCodes[i] & 0xFF) == keyCode) {
             return true;
         }
     }
     return false;
 }
-bool containsKeys(MappedKeyCodes_t* mappedKeyCodes,uint8_t* pKeyCodeFound,uint8_t checkLength,int keyCode,...) {
+bool containsKeys(MappedKeyCodes_t* mappedKeyCodes,KeyboardUsageCode_t* pKeyCodeFound,uint8_t checkLength,KeyboardUsageCode_t keyCode,...) {
     va_list nextCode;
     va_start(nextCode,keyCode);
     *pKeyCodeFound = 0;
 	for(int i=0; i<checkLength; i++) {
 		for(int j=0; j<mappedKeyCodes->length; j++) {
-			if((uint8_t)(mappedKeyCodes->keyCodes[j] & 0xFF) == keyCode) {
+			if((KeyboardUsageCode_t)(mappedKeyCodes->keyCodes[j] & 0xFF) == keyCode) {
 				*pKeyCodeFound = keyCode;
 				i=checkLength;
 				break;
