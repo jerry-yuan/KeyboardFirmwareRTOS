@@ -5,9 +5,12 @@
 #include <SGUI_Menu.h>
 
 #include <resources/Font.h>
+#include <resources/fontawesome.h>
+
 #include <task/keyboard.h>
 #include <bsp/tim.h>
 #include <lib/keyboard.h>
+
 
 enum MenuActions {
     NoAction=0x00,
@@ -41,11 +44,11 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
 	SGUI_MENU_PALETTE menuPalette;
     menuItems  = pvPortMalloc(sizeof(SGUI_ITEMS_ITEM)*5);
     memset(menuItems,0,sizeof(SGUI_ITEMS_ITEM)*5);
-    menuItems[0].cszLabelText = "时钟";
-    menuItems[1].cszLabelText = "计算器";
-    menuItems[2].cszLabelText = "菜单3";
-    menuItems[3].cszLabelText = "菜单4";
-    menuItems[4].cszLabelText = "菜单5";
+    menuItems[0].cszLabelText = FA_CLOCK_O " 时钟";
+    menuItems[1].cszLabelText = FA_CALCULATOR " 计算器";
+    menuItems[2].cszLabelText = FA_BATTERY_FULL " 菜单3";
+    menuItems[3].cszLabelText = FA_BATTERY_HALF " 菜单4";
+    menuItems[4].cszLabelText = FA_BATTERY_EMPTY " 菜单5";
 
     menuObject = pvPortMalloc(sizeof(SGUI_MENU_STRUCT));
     memset(menuObject,0,sizeof(SGUI_MENU_STRUCT));
