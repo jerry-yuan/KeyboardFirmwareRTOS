@@ -131,7 +131,6 @@
 		</Unit>
 		<Unit filename="inc\bsp\bglight.h" />
 		<Unit filename="inc\bsp\bsp.h" />
-		<Unit filename="inc\bsp\flashMap.h" />
 		<Unit filename="inc\bsp\keyboard.h" />
 		<Unit filename="inc\bsp\oled.h" />
 		<Unit filename="inc\bsp\rtc.h" />
@@ -140,9 +139,14 @@
 		<Unit filename="inc\bsp\usart.h" />
 		<Unit filename="inc\bsp\W25Q64.h" />
 		<Unit filename="inc\delay.h" />
+		<Unit filename="inc\fatfs\diskio.h" />
+		<Unit filename="inc\fatfs\ff.h" />
+		<Unit filename="inc\fatfs\ffconf.h" />
 		<Unit filename="inc\FreeRTOSConfig.h" />
+		<Unit filename="inc\lib\fs.h" />
 		<Unit filename="inc\lib\GUIToolLib.h" />
 		<Unit filename="inc\lib\keyboard.h" />
+		<Unit filename="inc\lib\lib.h" />
 		<Unit filename="inc\resources\Font.h" />
 		<Unit filename="inc\resources\fontawesome.h" />
 		<Unit filename="inc\screen\calculator\calculator.h" />
@@ -295,10 +299,28 @@
 		<Unit filename="src\delay.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src\fatfs\diskio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\fatfs\ff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\fatfs\ffsystem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\fatfs\ffunicode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\lib\fs.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src\lib\GUIToolLib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\lib\keyboard.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\lib\lib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\lib\math.c">
@@ -307,7 +329,7 @@
 		<Unit filename="src\main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src\resource\Font.c">
+		<Unit filename="src\resources\Font.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\screen\calculator\calculator.c">

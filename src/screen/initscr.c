@@ -25,7 +25,7 @@ HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF){
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
-    W25X_Read_Data(oledFramebuffer,FLASH_ADDR_SPLASH,OLED_FRAMEBUFFER_SIZE);
+    W25X_Read_Data(oledFramebuffer,0,OLED_FRAMEBUFFER_SIZE);
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){

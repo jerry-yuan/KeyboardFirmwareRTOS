@@ -50,14 +50,14 @@ uint8_t* W25X_Buffer;//[W25X_SECTOR_SIZE];
 volatile bool sem_W25X_DMA_Busy = true;
 volatile bool sem_W25X_DMA_RxRdy= false;
 
-
 /*---------------------*
 *       数据定义(内部用)
 *----------------------*/
 static uint8_t  W25X_TX_Byte=0xFF;
 
 
-void FLASH_Initialize(){
+
+void FLASH_Initialize() {
     W25X_Buffer=pvPortMalloc(W25X_SECTOR_SIZE);
     W25X_GPIO_Config();
     W25X_Init();
@@ -513,13 +513,13 @@ void W25X_DMARead_Data(uint8_t * pBuffer,uint32_t ReadAddr,uint16_t NumByteToRea
 
 
     //等待DMA传送数据完毕
-/*
-    while( !DMA_GetFlagStatus(DMA1_FLAG_TC2));  //等待接收DMA的传输完成
-    DMA_Cmd(DMA1_Channel3, DISABLE);            //关闭发送DMA
-    DMA_Cmd(DMA1_Channel2, DISABLE);            //关闭接收DMA
-    sem_W25X_DMA_RxRdy = true;                  //标记DMA接收数据信号
-    W25X_CS_H();
-*/
+    /*
+        while( !DMA_GetFlagStatus(DMA1_FLAG_TC2));  //等待接收DMA的传输完成
+        DMA_Cmd(DMA1_Channel3, DISABLE);            //关闭发送DMA
+        DMA_Cmd(DMA1_Channel2, DISABLE);            //关闭接收DMA
+        sem_W25X_DMA_RxRdy = true;                  //标记DMA接收数据信号
+        W25X_CS_H();
+    */
 
 }
 

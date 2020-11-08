@@ -36,34 +36,42 @@ static void setPixel(uint8_t* dst,int x,int y,int xSize,uint8_t value){
         *(dst+bytesPerLine*y+x/2) |= (value& 0x0F);
     }
 }
-void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,const uint32_t uiFontOffset){
+void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,FIL* pstFontFile){
 	GUI_FONT_HEADER stHeader;
 	GUI_FONT_SECTION stSection;
 	GUI_FONT_CHARINFO stCharInfo;
 	uint8_t* puiCharData;
 	SGUI_COLOR eColor;
+	UINT uiRead;
 	// 读取字体头
-	W25X_Read_Data((uint8_t*)&stHeader,uiFontOffset,sizeof(stHeader));
+	f_lseek(pstFontFile,0);
+	f_read(pstFontFile,&stHeader,sizeof(stHeader),&uiRead);
+	//W25X_Read_Data((uint8_t*)&stHeader,uiFontOffset,sizeof(stHeader));
 	// 读取searchTree根节点
-	W25X_Read_Data((uint8_t*)&stSection,uiFontOffset+stHeader.pSearchTreeArea,sizeof(stSection));
+	f_read(pstFontFile,&stSection,sizeof(stSection),&uiRead);
+	//W25X_Read_Data((uint8_t*)&stSection,uiFontOffset+stHeader.pSearchTreeArea,sizeof(stSection));
 	// 查找这个字所在段
 	while(stSection.pLeftChild!=0 ||stSection.pRightChild!=0){
 		if(stSection.uiFirst>uiCode || stSection.uiLast<uiCode){
 			break;
 		}
 		if(stSection.uiMiddle<uiCode){
-			W25X_Read_Data((uint8_t*)&stSection,uiFontOffset+stSection.pRightChild,sizeof(stSection));
+			f_lseek(pstFontFile,stSection.pRightChild);
+			//W25X_Read_Data((uint8_t*)&stSection,uiFontOffset+stSection.pRightChild,sizeof(stSection));
 		}else{
-			W25X_Read_Data((uint8_t*)&stSection,uiFontOffset+stSection.pLeftChild,sizeof(stSection));
+			f_lseek(pstFontFile,stSection.pLeftChild);
+			//W25X_Read_Data((uint8_t*)&stSection,uiFontOffset+stSection.pLeftChild,sizeof(stSection));
 		}
+		f_read(pstFontFile,&stSection,sizeof(stSection),&uiRead);
 	}
 	if(stSection.uiFirst>uiCode || stSection.uiLast<uiCode){
 		printf("%04X cannot found in the font base.\r\n",uiCode);
 		return;
 	}
 	// 查找这个字的属性
-	W25X_Read_Data((uint8_t*)&stCharInfo,uiFontOffset+stSection.pCharInfoAddr+sizeof(GUI_FONT_CHARINFO)*(uiCode-stSection.uiFirst),sizeof(stSection));
-
+	//W25X_Read_Data((uint8_t*)&stCharInfo,uiFontOffset+stSection.pCharInfoAddr+sizeof(GUI_FONT_CHARINFO)*(uiCode-stSection.uiFirst),sizeof(stSection));
+	f_lseek(pstFontFile,stSection.pCharInfoAddr+sizeof(GUI_FONT_CHARINFO)*(uiCode-stSection.uiFirst));
+	f_read(pstFontFile,&stCharInfo,sizeof(stCharInfo),&uiRead);
 	pstBitmap->fnGetPixel = SGUI_BMP_SCAN_MODE_DHPH;
 	pstBitmap->iDepthBits = stHeader.uiDepthBits;
 	pstBitmap->iHeight = stHeader.uiYSize;
@@ -73,7 +81,11 @@ void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,const uint32_t u
 		// 读取数据
 		SGUI_SystemIF_MemorySet((uint8_t*)pstBitmap->pData,0,(pstBitmap->iWidth+1)/2*pstBitmap->iHeight);
 		puiCharData = pvPortMalloc(sizeof(uint8_t)*(stCharInfo.uiXSize+1)/2*stCharInfo.uiYSize);
-		W25X_Read_Data((uint8_t*)puiCharData,uiFontOffset+(stCharInfo.uiOffsetAddr & 0x00FFFFFF),(stCharInfo.uiXSize+1)/2*stCharInfo.uiYSize);
+
+		f_lseek(pstFontFile,(stCharInfo.uiOffsetAddr & 0x00FFFFFF));
+		f_read(pstFontFile,puiCharData,(stCharInfo.uiXSize+1)/2*stCharInfo.uiYSize,&uiRead);
+
+		//W25X_Read_Data((uint8_t*)puiCharData,uiFontOffset+(stCharInfo.uiOffsetAddr & 0x00FFFFFF),(stCharInfo.uiXSize+1)/2*stCharInfo.uiYSize);
 		for(uint8_t x=0;x<stCharInfo.uiXSize;x++){
 			for(uint8_t y=0;y<stCharInfo.uiYSize;y++){
 				eColor = getPixel(puiCharData,x,y,stCharInfo.uiXSize);
@@ -82,5 +94,5 @@ void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,const uint32_t u
 		}
 		vPortFree(puiCharData);
 	}
-
+	TIM_Cmd(TIM4,DISABLE);
 }

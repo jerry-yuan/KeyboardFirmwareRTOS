@@ -169,6 +169,7 @@ SGUI_COLOR OLED_GetPixel(SGUI_INT x,SGUI_INT y) {
 	}
 }
 void OLED_SyncBuffer() {
+
     OLED_SendBuffer(OLED_DISPLAY,oledFramebuffer,OLED_FRAMEBUFFER_SIZE);
 }
 void OLED_SetDisplayState(bool display) {

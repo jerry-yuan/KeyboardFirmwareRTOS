@@ -76,7 +76,9 @@ static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParam
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
+	portENTER_CRITICAL();
     SGUI_Menu_Repaint(pstDeviceIF,menuObject);
+	portEXIT_CRITICAL();
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
@@ -86,7 +88,7 @@ static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_
     if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)) {
         keyEvent = ((KEY_EVENT*)pstEvent);
 		iLastAction = NoAction;
-		TIM_KeyRepeater_Reset();
+		//TIM_KeyRepeater_Reset();
 
         stPressed.cursor	= 0;
         stPressed.length	= keyEvent->Data.uiPressedCount;
@@ -108,7 +110,7 @@ static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_
             *piActionID = Enter;
         }
         if(iLastAction & 0x40) {
-            TIM_KeyRepeater_Set();
+            //TIM_KeyRepeater_Set();
         }
     }else if(pstEvent->iID == KEY_REPEAT_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_REPEAT_EVENT)){
 		if(iLastAction!=NoAction){
@@ -118,6 +120,7 @@ static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID) {
+
     if(iActionID == GoUp) {
         menuObject->stItems.iSelection=(menuObject->stItems.iSelection+menuObject->stItems.iCount-1) % menuObject->stItems.iCount;
     } else if(iActionID == GoDown) {
@@ -135,6 +138,5 @@ static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESU
     if(iActionID & 0x80) {
         Refresh(pstDeviceIF,NULL);
     }
-
     return HMI_RET_NORMAL;
 }

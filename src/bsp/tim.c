@@ -70,6 +70,22 @@ void TIM_Initialize() {
 
     stKeyRepeatEvent.Head.iID	= KEY_REPEAT_EVENT_ID;
     stKeyRepeatEvent.Head.iSize = sizeof(stKeyRepeatEvent);
+
+
+
+
+
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+
+    TIM_TimeBaseStructure.TIM_Period        = 100000;                      // 自动重装载寄存器的值,用处不大,基本全是手动设定
+    TIM_TimeBaseStructure.TIM_Prescaler     = 3600-1 ;                // 时钟预分频数为 1/36000,计数频率为72MHz / 36000 2kHz
+    TIM_TimeBaseStructure.TIM_CounterMode   = TIM_CounterMode_Up;                         // 计数器计数模式，基本定时器只能向上计数，没有计数模式的设置
+    TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV2;
+
+    // 初始化定时器
+    TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
+	TIM_ClearFlag(TIM4,TIM_FLAG_Update);
+
 }
 
 void TIM_ScreenSaver_Reset() {

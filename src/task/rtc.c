@@ -36,7 +36,7 @@ void RTCTask(void* parameter) {
             pEvent->Head.iID = RTC_EVENT_ID;
             pEvent->Head.iSize=sizeof(RTC_EVENT);
 
-            xQueueSend(hEventQueue,&pEvent,portMAX_DELAY);
+            //xQueueSend(hEventQueue,&pEvent,portMAX_DELAY);
         }
     }
 }

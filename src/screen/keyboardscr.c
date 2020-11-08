@@ -63,7 +63,7 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
     TIM_ScreenSaver_Reset();
-    W25X_Read_Data(oledFramebuffer,FLASH_ADDR_RUNBG,OLED_FRAMEBUFFER_SIZE);
+    //W25X_Read_Data(oledFramebuffer,0,OLED_FRAMEBUFFER_SIZE);
     Refresh(pstDeviceIF,NULL);
     return HMI_RET_NORMAL;
 }

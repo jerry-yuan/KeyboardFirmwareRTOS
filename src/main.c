@@ -1,6 +1,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
-#include "bsp.h"
+#include <bsp/bsp.h>
+#include <lib/lib.h>
 #include <usb/usb.h>
 #include <task/priorities.h>
 #include <task/usbdevicestate.h>
@@ -31,6 +32,7 @@ static void bootstrap(void) {
 int main(void) {
     BaseType_t xReturn=pdPASS;
     BSP_Initialize();
+    LIB_Initialize();
     // 引导任务
     xReturn=xTaskCreate((TaskFunction_t)bootstrap,"bootstrap",512,NULL,TASK_BOOTSTRAP_PRIORITY,&hBootstrap);
     if(xReturn==pdPASS){
