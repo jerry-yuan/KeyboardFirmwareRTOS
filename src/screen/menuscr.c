@@ -42,13 +42,10 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     SGUI_RECT menuRect;
     SGUI_ITEMS_ITEM* menuItems=NULL;
 	SGUI_MENU_PALETTE menuPalette;
-    menuItems  = pvPortMalloc(sizeof(SGUI_ITEMS_ITEM)*5);
-    memset(menuItems,0,sizeof(SGUI_ITEMS_ITEM)*5);
+    menuItems  = pvPortMalloc(sizeof(SGUI_ITEMS_ITEM)*2);
+    memset(menuItems,0,sizeof(SGUI_ITEMS_ITEM)*2);
     menuItems[0].cszLabelText = FA_CLOCK_O " 时钟";
     menuItems[1].cszLabelText = FA_CALCULATOR " 计算器";
-    menuItems[2].cszLabelText = FA_BATTERY_FULL " 菜单3";
-    menuItems[3].cszLabelText = FA_BATTERY_HALF " 菜单4";
-    menuItems[4].cszLabelText = FA_BATTERY_EMPTY " 菜单5";
 
     menuObject = pvPortMalloc(sizeof(SGUI_MENU_STRUCT));
     memset(menuObject,0,sizeof(SGUI_MENU_STRUCT));
@@ -67,7 +64,7 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
 	menuPalette.stItemBase.eFocusColor = 0x05;
 	menuPalette.stItemBase.eFocusTextColor = 0x0F;
 
-    SGUI_Menu_Initialize(menuObject,SGUI_FONT_REF(Deng12),&menuRect,menuItems,5,&menuPalette);
+    SGUI_Menu_Initialize(menuObject,SGUI_FONT_REF(Deng12),&menuRect,menuItems,2,&menuPalette);
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
