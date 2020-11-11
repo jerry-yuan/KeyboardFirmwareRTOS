@@ -77,7 +77,7 @@ void TIM_Initialize() {
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 
-    TIM_TimeBaseStructure.TIM_Period        = 100000;                      // 自动重装载寄存器的值,用处不大,基本全是手动设定
+    TIM_TimeBaseStructure.TIM_Period        = 10000;                      // 自动重装载寄存器的值,用处不大,基本全是手动设定
     TIM_TimeBaseStructure.TIM_Prescaler     = 3600-1 ;                // 时钟预分频数为 1/36000,计数频率为72MHz / 36000 2kHz
     TIM_TimeBaseStructure.TIM_CounterMode   = TIM_CounterMode_Up;                         // 计数器计数模式，基本定时器只能向上计数，没有计数模式的设置
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV2;

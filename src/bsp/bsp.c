@@ -3,7 +3,7 @@
 #include <delay.h>
 #include <bsp/usart.h>
 #include <bsp/statled.h>
-#include <bsp/W25Q64.h>
+#include <bsp/w25x.h>
 #include <bsp/oled.h>
 #include <bsp/keyboard.h>
 #include <bsp/rtc.h>
@@ -19,6 +19,6 @@ void BSP_Initialize(){
     STAT_Initialize();
     OLED_Initialize();
     LED_Initialize();
-    FLASH_Initialize();
+    W25X_Initialize();
     KEY_Initialize();
 }

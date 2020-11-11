@@ -33,6 +33,7 @@ int main(void) {
     BaseType_t xReturn=pdPASS;
     BSP_Initialize();
     LIB_Initialize();
+
     // 引导任务
     xReturn=xTaskCreate((TaskFunction_t)bootstrap,"bootstrap",512,NULL,TASK_BOOTSTRAP_PRIORITY,&hBootstrap);
     if(xReturn==pdPASS){

@@ -138,6 +138,7 @@
 		<Unit filename="inc\bsp\tim.h" />
 		<Unit filename="inc\bsp\usart.h" />
 		<Unit filename="inc\bsp\W25Q64.h" />
+		<Unit filename="inc\bsp\w25x.h" />
 		<Unit filename="inc\delay.h" />
 		<Unit filename="inc\fatfs\diskio.h" />
 		<Unit filename="inc\fatfs\ff.h" />
@@ -293,7 +294,7 @@
 		<Unit filename="src\bsp\usart.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src\bsp\W25Q64.c">
+		<Unit filename="src\bsp\w25x.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\delay.c">
@@ -493,7 +494,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger>
-				<target_debugging_settings target="Debug" active_interface="J-link">
+				<target_debugging_settings target="Release" active_interface="J-link">
 					<debug_interface interface_id="J-link" ip_address="localhost" ip_port="2331" path="C:\Program Files (x86)\SEGGER\JLink_V494h" executable="JLinkGDBServer.exe" description="" dont_start_server="false" backoff_time="2000" options="2" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
 						<family_options family_id="STMicroelectronics">
 							<option opt_id="ID_DEVICE" opt_value="STM32F103RC" />
@@ -532,7 +533,7 @@
 						</family_options>
 					</debug_interface>
 				</target_debugging_settings>
-				<target_debugging_settings target="Release" active_interface="J-link">
+				<target_debugging_settings target="Debug" active_interface="J-link">
 					<debug_interface interface_id="J-link" ip_address="localhost" ip_port="2331" path="C:\Program Files (x86)\SEGGER\JLink_V494h" executable="JLinkGDBServer.exe" description="" dont_start_server="false" backoff_time="2000" options="2" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
 						<family_options family_id="STMicroelectronics">
 							<option opt_id="ID_DEVICE" opt_value="STM32F103RC" />
