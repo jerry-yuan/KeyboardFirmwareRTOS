@@ -4,7 +4,7 @@
 #include <task/gui.h>
 
 #include <bsp/oled.h>
-#include <bsp/W25Q64.h>
+#include <bsp/w25x.h>
 
 #include <usb/hw_config.h>
 #include <usb_lib.h>

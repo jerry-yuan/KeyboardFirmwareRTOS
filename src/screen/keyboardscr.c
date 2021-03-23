@@ -4,8 +4,9 @@
 #include <SGUI_Basic.h>
 
 #include <bsp/oled.h>
-#include <bsp/W25Q64.h>
+#include <bsp/w25x.h>
 #include <bsp/tim.h>
+#include <bsp/flashMap.h>
 
 #include <task/keyboard.h>
 
@@ -63,7 +64,7 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
     TIM_ScreenSaver_Reset();
-    W25X_Read_Data(oledFramebuffer,FLASH_ADDR_RUNBG,OLED_FRAMEBUFFER_SIZE);
+    W25X_Read_Data(FLASH_ADDR_RUNBG,oledFramebuffer,OLED_FRAMEBUFFER_SIZE);
     Refresh(pstDeviceIF,NULL);
     return HMI_RET_NORMAL;
 }

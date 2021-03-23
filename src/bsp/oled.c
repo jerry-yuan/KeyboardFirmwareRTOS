@@ -6,7 +6,7 @@
 #include <task.h>
 
 #include <delay.h>
-#include <w25q64.h>
+#include <w25x.h>
 
 #include <lib/GUIToolLib.h>
 

@@ -8,7 +8,7 @@
 
 #include <FreeRTOS.h>
 #include <bsp/oled.h>
-#include <bsp/W25Q64.h>
+#include <bsp/w25x.h>
 #include <USB/usb_pwr.h>
 #include <resources/Font.h>
 

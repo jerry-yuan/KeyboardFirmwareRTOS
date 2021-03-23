@@ -1,10 +1,11 @@
 #include <resources/Font.h>
 #include <SGUI_Basic.h>
 #include <SGUI_Text.h>
-#include <bsp/W25Q64.h>
+#include <bsp/w25x.h>
 #include <lib/GUIToolLib.h>
 #include <stdio.h>
 #include <FreeRTOS.h>
+#include <flashMap.h>
 static void GUITool_Deng12_GetBitmap(SGUI_BMP_RES* pstBitmap,SGUI_UINT32 uiCode,SGUI_BOOL bDryRun);
 static void GUITool_LCD44_GetBitmap(SGUI_BMP_RES* pstBitmap,SGUI_UINT32 uiCode,SGUI_BOOL bDryRun);
 

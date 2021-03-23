@@ -1,10 +1,10 @@
 #include <screen/initscr.h>
 #include <stdio.h>
 #include <bsp/oled.h>
-#include <bsp/W25Q64.h>
+#include <bsp/w25x.h>
 #include <SGUI_Text.h>
 #include <SGUI_FontResource.h>
-
+#include <bsp/flashMap.h>
 static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF);
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters);
 static HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters);
@@ -25,7 +25,7 @@ HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF){
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){
-    W25X_Read_Data(oledFramebuffer,FLASH_ADDR_SPLASH,OLED_FRAMEBUFFER_SIZE);
+    W25X_Read_Data(FLASH_ADDR_SPLASH,oledFramebuffer,OLED_FRAMEBUFFER_SIZE);
     return HMI_RET_NORMAL;
 }
 HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters){

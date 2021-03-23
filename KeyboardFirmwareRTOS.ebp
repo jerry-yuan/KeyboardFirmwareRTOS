@@ -138,7 +138,7 @@
 		<Unit filename="inc\bsp\statled.h" />
 		<Unit filename="inc\bsp\tim.h" />
 		<Unit filename="inc\bsp\usart.h" />
-		<Unit filename="inc\bsp\W25Q64.h" />
+		<Unit filename="inc\bsp\w25x.h" />
 		<Unit filename="inc\delay.h" />
 		<Unit filename="inc\FreeRTOSConfig.h" />
 		<Unit filename="inc\lib\GUIToolLib.h" />
@@ -289,7 +289,7 @@
 		<Unit filename="src\bsp\usart.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src\bsp\W25Q64.c">
+		<Unit filename="src\bsp\w25x.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\delay.c">
