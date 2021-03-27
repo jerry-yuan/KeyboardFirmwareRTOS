@@ -1,14 +1,20 @@
 #include <w25x.h>
 #include <stm32f10x.h>
+#include <stdio.h>
+
+#define W25X_DMA_Channel_Rx DMA2_Channel1
+#define W25X_DMA_Channel_Tx DMA2_Channel2
+
 void W25X_Initialize() {
-    GPIO_InitTypeDef GPIO_InitStructure;
-    SPI_InitTypeDef SPI_InitStructure;
-    DMA_InitTypeDef DMA_InitStructure;
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
+
+    // 使能GPIO引脚时钟
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
     GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable , ENABLE); //禁止JTAG功能（保留SWD下载口）
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
 
+    /**
+     * 初始化GPIO
+     */
+    GPIO_InitTypeDef GPIO_InitStructure;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -18,67 +24,127 @@ void W25X_Initialize() {
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOA, &GPIO_InitStructure);
+    // 临时禁用Flash
     GPIO_SetBits(GPIOA,GPIO_Pin_15);
+
+    /**
+     * 初始化SPI3
+     */
+
+    // 使能SPI3时钟
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
+    SPI_InitTypeDef SPI_InitStructure;
+
     SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
     SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
     SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-    SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-    SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+    SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+    SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
     SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
     SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
     SPI_InitStructure.SPI_CRCPolynomial = 7;
+
+    // 初始化SPI3
     SPI_Init(SPI3, &SPI_InitStructure);
-    //使能DMA发送
-    DMA_DeInit(DMA2_Channel2);
-    DMA_InitStructure.DMA_PeripheralBaseAddr = (u32)&SPI3->DR;
-    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-    DMA_InitStructure.DMA_BufferSize = 1024;
-    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-    DMA_InitStructure.DMA_Mode =   DMA_Mode_Normal;
-    DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
-    DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    DMA_Init(DMA2_Channel2, &DMA_InitStructure);
-    //使能DMA接收
-    DMA_DeInit(DMA2_Channel1);
-    DMA_InitStructure.DMA_PeripheralBaseAddr = (u32)&SPI3->DR;
-    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-    DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-    DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
-    DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    DMA_Init(DMA2_Channel1, &DMA_InitStructure);
-    SPI_I2S_DMACmd(SPI3, SPI_I2S_DMAReq_Rx, ENABLE);
-    SPI_I2S_DMACmd(SPI3,SPI_I2S_DMAReq_Tx,ENABLE);
+    // 使能SPI3
     SPI_Cmd(SPI3, ENABLE);
+
+    /**
+     * 初始化DMA2
+     * DMA2->Channel1 ---- 接收
+     * DMA2->Channel2 ---- 发送
+     */
+
+    // 启用DMA2时钟
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
+
+    DMA_InitTypeDef DMA_InitStructure;
+    // 初始化公用DMA结构体
+    DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&SPI3->DR;
+    DMA_InitStructure.DMA_MemoryBaseAddr     = (uint32_t)0;
+    DMA_InitStructure.DMA_BufferSize		 = (uint32_t)0;
+    DMA_InitStructure.DMA_PeripheralInc      = DMA_PeripheralInc_Disable;
+    DMA_InitStructure.DMA_MemoryInc          = DMA_MemoryInc_Enable;
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    DMA_InitStructure.DMA_MemoryDataSize     = DMA_MemoryDataSize_Byte;
+    DMA_InitStructure.DMA_Mode               = DMA_Mode_Normal;
+    DMA_InitStructure.DMA_Priority           = DMA_Priority_VeryHigh;
+    DMA_InitStructure.DMA_M2M                = DMA_M2M_Disable;
+
+    // 初始化DMA接收通道
+    DMA_DeInit(W25X_DMA_Channel_Rx);
+    DMA_InitStructure.DMA_DIR                = DMA_DIR_PeripheralSRC;
+    DMA_Init(W25X_DMA_Channel_Rx, &DMA_InitStructure);
+
+	// 初始化DMA发送通道
+	DMA_DeInit(W25X_DMA_Channel_Tx);
+	DMA_InitStructure.DMA_DIR                = DMA_DIR_PeripheralDST;
+    DMA_Init(W25X_DMA_Channel_Tx, &DMA_InitStructure);
+
+	// 使能SPI3通过DMA收发数据
+    SPI_I2S_DMACmd(SPI3, SPI_I2S_DMAReq_Rx, ENABLE);
+    SPI_I2S_DMACmd(SPI3, SPI_I2S_DMAReq_Tx, ENABLE);
+
 }
 
+void W25X_ReceiveBuffer(void* buffer,uint32_t length){
+	uint8_t dummy = 0xFF;
+	// 清除中断
+	DMA_ClearITPendingBit(DMA2_IT_GL1|DMA2_IT_GL2);
+	DMA_ClearFlag(DMA2_FLAG_GL1|DMA2_FLAG_GL2);
+
+	dummy=SPI3->DR;
+	dummy=0xFF;
+
+	// SPI接收通道(DMA2_Channel1)
+	W25X_DMA_Channel_Rx->CNDTR  = (uint32_t)length;				// 拷贝数量			length
+	W25X_DMA_Channel_Rx->CCR   |= DMA_MemoryInc_Enable;			// 内存增长模式		增长
+	W25X_DMA_Channel_Rx->CMAR   = (uint32_t)buffer;				// 内存地址			buffer
+
+	// SPI发送通道(DMA2_Channel2)
+	W25X_DMA_Channel_Tx->CNDTR  = (uint32_t)length;				// 拷贝数量			length
+	W25X_DMA_Channel_Tx->CCR   &= ~DMA_MemoryInc_Enable;		// 内存增长模式		不增长
+	W25X_DMA_Channel_Tx->CMAR   = (uint32_t)&dummy;				// 内存地址			buffer
+
+	// 启动DMA
+	DMA_Cmd(W25X_DMA_Channel_Rx,ENABLE);
+	DMA_Cmd(W25X_DMA_Channel_Tx,ENABLE);
+
+	while(DMA_GetFlagStatus(DMA2_FLAG_TC1)==RESET);	//TODO: 改成信号量调度的
+	// 关掉DMA
+	DMA_Cmd(W25X_DMA_Channel_Rx,DISABLE);
+	DMA_Cmd(W25X_DMA_Channel_Tx,DISABLE);
+}
 void W25X_SendBuffer(const void* buffer,uint32_t length) {
-    DMA2->IFCR 			   |= (0xF<<4);
-    DMA2_Channel2->CNDTR	= length; 					//设置要传输的数据长度
-    DMA2_Channel2->CMAR		= (uint32_t)buffer; 		//设置RAM缓冲区地址
-    DMA2_Channel2->CCR	   |= 0x1;
-    while(!(DMA2->ISR&(1<<5)));
-    while (SPI_I2S_GetFlagStatus(SPI3, SPI_I2S_FLAG_TXE) == RESET);
-    DMA2_Channel2->CCR 	   &= (uint32_t)~0x1;
+    uint8_t dummy = 0xFF;
+	// 清除中断
+	DMA_ClearITPendingBit(DMA2_IT_GL1|DMA2_IT_GL2);
+	DMA_ClearFlag(DMA2_FLAG_GL1|DMA2_FLAG_GL2);
+
+	// 清除SPI中残留的数据
+	SPI3->DR;
+
+	// SPI接收通道(DMA2_Channel1)
+	W25X_DMA_Channel_Rx->CNDTR  = length;					// 拷贝数量			length
+	W25X_DMA_Channel_Rx->CCR   &= ~DMA_MemoryInc_Enable;	// 内存增长模式		不增长
+	W25X_DMA_Channel_Rx->CMAR   = (uint32_t)&dummy;			// 内存地址			dummy
+
+	// SPI发送通道(DMA2_Channel2)
+	W25X_DMA_Channel_Tx->CNDTR  = length;					// 拷贝数量			length
+	W25X_DMA_Channel_Tx->CCR   |= DMA_MemoryInc_Enable;		// 内存增长模式		增长
+	W25X_DMA_Channel_Tx->CMAR   = (uint32_t)buffer;			// 内存地址			buffer
+
+	// 启动DMA
+	DMA_Cmd(W25X_DMA_Channel_Rx,ENABLE);
+	DMA_Cmd(W25X_DMA_Channel_Tx,ENABLE);
+
+	while(DMA_GetFlagStatus(DMA2_FLAG_TC2)==RESET);
+	// 关掉DMA
+	DMA_Cmd(W25X_DMA_Channel_Rx,DISABLE);
+	DMA_Cmd(W25X_DMA_Channel_Tx,DISABLE);
 }
-void W25X_ReceiveBuffer(void* buffer,uint32_t length) {
-    SPI3->CR1|=SPI_Direction_2Lines_RxOnly;
-    *((char*)buffer) 		= SPI3->DR;			// 读取一次数据
-    DMA2->IFCR 			   |= (0xF<<0);
-    DMA2_Channel1->CNDTR    = length; 			//设置要传输的数据长度
-    DMA2_Channel1->CMAR     = (u32)buffer; 		//设置RAM缓冲区地址
-    DMA2_Channel1->CCR     |= 0x1;
-    while(!(DMA2->ISR&(1<<1)));
-    DMA2_Channel1->CCR     &= (uint32_t)~0x1;
-    SPI3->CR1              &= ~SPI_Direction_2Lines_RxOnly;
-}
+
 void W25X_Set_WriteState(FunctionalState writeState) {
     const uint8_t enableCmd[] = {W25X_CMD_WRITE_ENABLE};
     const uint8_t disableCmd[]= {W25X_CMD_WRITE_DISABLE};
@@ -104,7 +170,7 @@ void W25X_Write_Status(W25XStatus_t puiStatus) {
 
     GPIO_ResetBits(GPIOA,GPIO_Pin_15);
     W25X_SendBuffer(command,sizeof(command));
-    W25X_SendBuffer(puiStatus,sizeof(W25XStatus_t));
+    W25X_SendBuffer(&puiStatus,sizeof(W25XStatus_t));
     GPIO_SetBits(GPIOA,GPIO_Pin_15);
 }
 void W25X_Read_Data(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
