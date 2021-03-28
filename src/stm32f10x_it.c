@@ -153,12 +153,19 @@ void SysTick_Handler(void) {
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f10x_xx.s).                                            */
 /******************************************************************************/
-
+extern uint16_t t4;
 void RTC_IRQHandler(void) {
     BaseType_t xReturn = pdPASS;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     if(RTC_GetITStatus(RTC_IT_SEC) != RESET) {
         RTC_ClearITPendingBit(RTC_IT_SEC);
+
+		TIM_Cmd(TIM4,DISABLE);
+        t4=TIM_GetCounter(TIM4);
+        TIM_SetCounter(TIM4,0);
+
+		TIM_Cmd(TIM4,ENABLE);
+
         xReturn=xEventGroupSetBitsFromISR(hRTCEvent,RTC_EVENT_BIT,&xHigherPriorityTaskWoken);
         if(xReturn == pdFAIL) {
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
