@@ -36,7 +36,7 @@ static HMI_SCREEN_ACTION screenActions= {
 
 HMI_SCREEN_OBJECT SCREEN_Menu = {SCREEN_Menu_ID,&screenActions};
 
-static SGUI_MENU_STRUCT* menuObject=NULL;
+static SGUI_MENU* menuObject=NULL;
 
 static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     SGUI_RECT menuRect;
@@ -47,8 +47,8 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     menuItems[0].cszLabelText = FA_CLOCK_O " 时钟";
     menuItems[1].cszLabelText = FA_CALCULATOR " 计算器";
 
-    menuObject = pvPortMalloc(sizeof(SGUI_MENU_STRUCT));
-    memset(menuObject,0,sizeof(SGUI_MENU_STRUCT));
+    menuObject = pvPortMalloc(sizeof(SGUI_MENU));
+    memset(menuObject,0,sizeof(SGUI_MENU));
 
 
     menuRect.iX=0;
@@ -59,12 +59,13 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
 	menuPalette.uiDepthBits = 4;
 	menuPalette.eBorder = 0x0F;
 	menuPalette.eDirectionIconColor = 0x0F;
+	menuPalette.stItemBase.uiDepthBits = 4;
 	menuPalette.stItemBase.eBackgroundColor = 0x01;
 	menuPalette.stItemBase.eTextColor = 0x0F;
 	menuPalette.stItemBase.eFocusColor = 0x05;
 	menuPalette.stItemBase.eFocusTextColor = 0x0F;
 
-    SGUI_Menu_Initialize(menuObject,SGUI_FONT_REF(Deng12),&menuRect,menuItems,2,&menuPalette);
+    SGUI_Menu_Initialize(menuObject,&menuRect,&menuPalette,SGUI_FONT_REF(Deng12),menuItems,2);
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
@@ -116,15 +117,15 @@ static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_
 }
 static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID) {
     if(iActionID == GoUp) {
-        menuObject->stItems.iSelection=(menuObject->stItems.iSelection+menuObject->stItems.iCount-1) % menuObject->stItems.iCount;
+		SGUI_Menu_Selecte(menuObject,(SGUI_Menu_GetSelection(menuObject)->iIndex + menuObject->stItems.iCount-1) % menuObject->stItems.iCount);
     } else if(iActionID == GoDown) {
-        menuObject->stItems.iSelection=(menuObject->stItems.iSelection+1)%menuObject->stItems.iCount;
+        SGUI_Menu_Selecte(menuObject,(SGUI_Menu_GetSelection(menuObject)->iIndex + 1) % menuObject->stItems.iCount);
     } else if(iActionID == GoBack){
         HMI_GoBack(NULL);
     } else if(iActionID == Enter){
-        if(menuObject->stItems.iSelection == 0){
+        if(SGUI_Menu_GetSelection(menuObject)->iIndex == 0){
             HMI_SwitchScreen(SCREEN_Clock_Show_ID,NULL);
-        }else if(menuObject->stItems.iSelection == 1){
+        }else if(SGUI_Menu_GetSelection(menuObject)->iIndex == 1){
 			HMI_SwitchScreen(SCREEN_Calculator_ID,NULL);
         }
     }
