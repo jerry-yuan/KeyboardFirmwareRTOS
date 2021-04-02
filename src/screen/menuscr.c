@@ -41,10 +41,10 @@ static SGUI_MENU* menuObject=NULL;
 static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     SGUI_RECT menuRect;
     SGUI_ITEMS_ITEM* menuItems=NULL;
-	SGUI_MENU_PALETTE menuPalette;
+	SGUI_MENU_PALETTE_INIT_PARAM menuPalette;
     menuItems  = pvPortMalloc(sizeof(SGUI_ITEMS_ITEM)*2);
     memset(menuItems,0,sizeof(SGUI_ITEMS_ITEM)*2);
-    menuItems[0].cszLabelText = FA_CLOCK_O " 时钟";
+    menuItems[0].cszLabelText = FA_CLOCK " 时钟";
     menuItems[1].cszLabelText = FA_CALCULATOR " 计算器";
 
     menuObject = pvPortMalloc(sizeof(SGUI_MENU));
@@ -57,8 +57,8 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     menuRect.iHeight=64;
 
 	menuPalette.uiDepthBits = 4;
-	menuPalette.eBorder = 0x0F;
-	menuPalette.eDirectionIconColor = 0x0F;
+	menuPalette.stMenu.eBorder = 0x0F;
+	menuPalette.stMenu.eDirectionIconColor = 0x0F;
 	menuPalette.stItemBase.uiDepthBits = 4;
 	menuPalette.stItemBase.eBackgroundColor = 0x01;
 	menuPalette.stItemBase.eTextColor = 0x0F;

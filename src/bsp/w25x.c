@@ -5,6 +5,8 @@
 #define W25X_DMA_Channel_Rx DMA2_Channel1
 #define W25X_DMA_Channel_Tx DMA2_Channel2
 
+void W25X_Wait_Busy();
+
 void W25X_Initialize() {
 
     // 使能GPIO引脚时钟
