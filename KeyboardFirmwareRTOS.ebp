@@ -428,9 +428,6 @@
 		<Unit filename="..\simplegui\GUI\src\SGUI_Basic.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\simplegui\GUI\src\SGUI_Common.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="..\simplegui\GUI\src\SGUI_FontResource.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -461,6 +458,9 @@
 		<Unit filename="..\simplegui\GUI\src\SGUI_Text.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="..\simplegui\GUI\src\SGUI_Utility.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="..\simplegui\GUI\src\SGUI_VariableBox.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -471,7 +471,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger>
-				<target_debugging_settings target="Debug" active_interface="J-link">
+				<target_debugging_settings target="Release" active_interface="J-link">
 					<debug_interface interface_id="J-link" ip_address="localhost" ip_port="2331" path="C:\Program Files (x86)\SEGGER\JLink_V494h" executable="JLinkGDBServer.exe" description="" dont_start_server="false" backoff_time="2000" options="2" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
 						<family_options family_id="STMicroelectronics">
 							<option opt_id="ID_DEVICE" opt_value="STM32F103RC" />
@@ -510,7 +510,7 @@
 						</family_options>
 					</debug_interface>
 				</target_debugging_settings>
-				<target_debugging_settings target="Release" active_interface="J-link">
+				<target_debugging_settings target="Debug" active_interface="J-link">
 					<debug_interface interface_id="J-link" ip_address="localhost" ip_port="2331" path="C:\Program Files (x86)\SEGGER\JLink_V494h" executable="JLinkGDBServer.exe" description="" dont_start_server="false" backoff_time="2000" options="2" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
 						<family_options family_id="STMicroelectronics">
 							<option opt_id="ID_DEVICE" opt_value="STM32F103RC" />

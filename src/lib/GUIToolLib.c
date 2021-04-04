@@ -65,7 +65,7 @@ void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,const uint32_t u
 	W25X_Read_Data(uiFontOffset+stSection.pCharInfoAddr+sizeof(GUI_FONT_CHARINFO)*(uiCode-stSection.uiFirst),&stCharInfo,sizeof(stSection));
 
 	pstBitmap->fnGetPixel = SGUI_BMP_SCAN_MODE_DHPH;
-	pstBitmap->iDepthBits = stHeader.uiDepthBits;
+	pstBitmap->uiDepthBits = stHeader.uiDepthBits;
 	pstBitmap->iHeight = stHeader.uiYSize;
 	pstBitmap->iWidth = SGUI_MAX_OF(stCharInfo.uiOffsetAddr >> 24,stCharInfo.uiXPos+stCharInfo.uiXSize);
 
