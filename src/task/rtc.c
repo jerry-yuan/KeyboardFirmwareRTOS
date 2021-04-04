@@ -32,6 +32,7 @@ void RTCTask(void* parameter) {
         xEventBits=xEventGroupWaitBits(hRTCEvent,RTC_EVENT_BIT,true,false,portMAX_DELAY);
         if(xEventBits & RTC_EVENT_BIT){
 			printf("T4->CR1=%04X,t4=%d\r\n",TIM4->CR1,t4);
+			printf("CR=%08X BDCR=%08X\r\n",RCC->CR,RCC->BDCR);
             pEvent = pvPortMalloc(sizeof(RTC_EVENT));
 
             pEvent->Head.iID = RTC_EVENT_ID;
