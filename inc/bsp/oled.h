@@ -15,12 +15,12 @@
  *
  */
 
-#define OLED_DC_PIN GPIO_Pin_2
-#define OLED_RESET_PIN GPIO_Pin_3
-#define OLED_CS_PIN GPIO_Pin_4
-#define OLED_CLK_PIN GPIO_Pin_5
-#define OLED_MISO_PIN GPIO_Pin_6
-#define OLED_MOSI_PIN GPIO_Pin_7
+#define OLED_PIN_DC		GPIO_Pin_2
+#define OLED_PIN_RESET	GPIO_Pin_3
+#define OLED_PIN_CS		GPIO_Pin_4
+#define OLED_PIN_CLK	GPIO_Pin_5
+#define OLED_PIN_MISO	GPIO_Pin_6
+#define OLED_PIN_MOSI	GPIO_Pin_7
 
 #define OLED_SCREEN_WIDTH 256
 #define OLED_SCREEN_HEIGHT 64
@@ -36,7 +36,7 @@ typedef enum {
 } BufferType;
 
 void OLED_Initialize();
-void OLED_SendBuffer(BufferType type,const uint8_t* buff,uint32_t len);
+void OLED_SendBuffer(BufferType type,const uint8_t* buffer,uint32_t length);
 void OLED_DMAInitialize();
 void OLED_DMADeInitialize();
 void OLED_Clear();

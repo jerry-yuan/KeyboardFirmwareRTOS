@@ -58,49 +58,69 @@ void OLED_Initialize() {
     // 使能GPIO引脚的时钟
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO,ENABLE);
     // 初始化 DC RESET CS
-    OLED.GPIO_Pin=OLED_DC_PIN | OLED_RESET_PIN |OLED_CS_PIN;
+    OLED.GPIO_Pin=OLED_PIN_DC | OLED_PIN_RESET;
     OLED.GPIO_Mode=GPIO_Mode_Out_PP;
     GPIO_Init(GPIOA,&OLED);
     // 初始化 SPI1 的 CLK MOSI MISO
-    OLED.GPIO_Pin=OLED_CLK_PIN|OLED_MOSI_PIN|OLED_MISO_PIN;
+    OLED.GPIO_Pin=OLED_PIN_CLK|OLED_PIN_MOSI|OLED_PIN_MISO|OLED_PIN_CS;
     OLED.GPIO_Mode=GPIO_Mode_AF_PP;
     GPIO_Init(GPIOA,&OLED);
 
     // 临时禁用OLED屏幕
-    GPIO_SetBits(GPIOA,OLED_CS_PIN);
+    GPIO_SetBits(GPIOA,OLED_PIN_CS);
 
     // 使能SPI1时钟
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1,ENABLE);
     SPI_InitTypeDef SPI;
 
-    SPI.SPI_Direction=SPI_Direction_2Lines_FullDuplex;  // 单线发送
-    SPI.SPI_Mode=SPI_Mode_Master;                       // 主机
-    SPI.SPI_DataSize=SPI_DataSize_8b;                   // 一次发送8bit
-    SPI.SPI_CPOL=SPI_CPOL_High;                         // 空闲时拉高
-    SPI.SPI_CPHA=SPI_CPHA_2Edge;                        // 上升沿采样
-    SPI.SPI_NSS=SPI_NSS_Soft;                           // 硬件控制CS
-    SPI.SPI_BaudRatePrescaler=SPI_BaudRatePrescaler_2;  // 2分频
-    SPI.SPI_FirstBit=SPI_FirstBit_MSB;                  // 高位先行
-    SPI.SPI_CRCPolynomial=7;                            // CRC校验
+    SPI.SPI_Direction				= SPI_Direction_1Line_Tx;	// 单线发送
+    SPI.SPI_Mode					= SPI_Mode_Master;			// 主机
+    SPI.SPI_DataSize				= SPI_DataSize_8b;			// 一次发送8bit
+    SPI.SPI_CPOL					= SPI_CPOL_High;			// 空闲时拉高
+    SPI.SPI_CPHA					= SPI_CPHA_2Edge;			// 上升沿采样
+    SPI.SPI_NSS						= SPI_NSS_Hard;				// 硬件控制CS
+    SPI.SPI_BaudRatePrescaler		= SPI_BaudRatePrescaler_2;	// 2分频
+    SPI.SPI_FirstBit				= SPI_FirstBit_MSB;			// 高位先行
+    SPI.SPI_CRCPolynomial			= 7;						// CRC校验
+    // 启用硬件CS
+    SPI_SSOutputCmd(SPI1,ENABLE);
     // 初始化SPI1
     SPI_Init(SPI1,&SPI);
     // 使能SPI1
     SPI_Cmd(SPI1,ENABLE);
     /**
+     * 初始化DMA
      */
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1,ENABLE);
+    DMA_InitTypeDef DMA;
 
+    DMA.DMA_PeripheralBaseAddr = (uint32_t)&SPI1->DR;
+    DMA.DMA_MemoryBaseAddr     = (uint32_t)0;
+    DMA.DMA_DIR                = DMA_DIR_PeripheralDST;
+    DMA.DMA_BufferSize         = 0;
+    DMA.DMA_PeripheralInc      = DMA_PeripheralInc_Disable;
+    DMA.DMA_MemoryInc          = DMA_MemoryInc_Enable;
+    DMA.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    DMA.DMA_MemoryDataSize     = DMA_MemoryDataSize_Byte;
+    DMA.DMA_Mode               = DMA_Mode_Normal;
+    DMA.DMA_Priority           = DMA_Priority_VeryHigh;
+    DMA.DMA_M2M                = DMA_M2M_Disable;
+
+    DMA_Init(DMA1_Channel3,&DMA);
+
+    // 启用SPI1的DMA请求
+    SPI_I2S_DMACmd(SPI1,SPI_I2S_DMAReq_Tx,ENABLE);
 
     /**
      * 初始化OLED屏幕
      */
-    GPIO_ResetBits(GPIOA,OLED_RESET_PIN);   // 拉低RESET重启屏幕
+    // 重置OLED屏幕
+    GPIO_ResetBits(GPIOA,OLED_PIN_RESET);   // 拉低RESET重启屏幕
     Delay_us(1);                            // 等待1uS
-    GPIO_SetBits(GPIOA,OLED_RESET_PIN);     // 拉高RESET屏幕开始运行
-    GPIO_ResetBits(GPIOA,OLED_CS_PIN);
+    GPIO_SetBits(GPIOA,OLED_PIN_RESET);     // 拉高RESET屏幕开始运行
+    // 执行初始化指令
     OLED_SendBuffer(OLED_COMMAND,oledInit,sizeof(oledInit));
 
-    SPI_I2S_DMACmd(SPI1,SPI_I2S_DMAReq_Tx,ENABLE);
     //初始化SimpleGUI设备指针
     screen = pvPortMalloc(sizeof(SGUI_SCR_DEV));
     memset(screen,0x00,sizeof(SGUI_SCR_DEV));
@@ -111,36 +131,35 @@ void OLED_Initialize() {
     screen->fnGetPixel  = OLED_GetPixel;
     screen->fnClear     = OLED_Clear;
     screen->fnSyncBuffer= OLED_SyncBuffer;
+
+    // 清屏
+    OLED_Clear();
+    OLED_SyncBuffer();
 }
-void OLED_SendBuffer(BufferType type,const uint8_t* buff,uint32_t len) {
-    DMA_InitTypeDef init;
+void OLED_SendBuffer(BufferType type,const uint8_t* buffer,uint32_t length) {
+    // 调整DC线电平
+    GPIO_WriteBit(GPIOA,OLED_PIN_DC,type);
 
-    init.DMA_PeripheralBaseAddr = (uint32_t)&SPI1->DR;
-    init.DMA_MemoryBaseAddr     = (uint32_t)buff;
-    init.DMA_DIR                = DMA_DIR_PeripheralDST;
-    init.DMA_BufferSize         = len;
-    init.DMA_PeripheralInc      = DMA_PeripheralInc_Disable;
-    init.DMA_MemoryInc          = DMA_MemoryInc_Enable;
-    init.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-    init.DMA_MemoryDataSize     = DMA_MemoryDataSize_Byte;
-    init.DMA_Mode               = DMA_Mode_Normal;
-    init.DMA_Priority           = DMA_Priority_VeryHigh;
-    init.DMA_M2M                = DMA_M2M_Disable;
+    // 清除中断
+    DMA_ClearITPendingBit(DMA1_IT_GL3);
+    DMA_ClearFlag(DMA1_FLAG_GL3);
 
-    //调整数据/命令线电平
-    GPIO_WriteBit(GPIOA,OLED_DC_PIN,type);
+    // 设置DMA参数
+    DMA1_Channel3->CNDTR	= (uint32_t)length;
+    DMA1_Channel3->CMAR		= (uint32_t)buffer;
 
-    DMA_Init(DMA1_Channel3,&init);
+    //启动DMA
     DMA_Cmd(DMA1_Channel3,ENABLE);
-    SPI_I2S_DMACmd(SPI1,SPI_I2S_DMAReq_Tx,ENABLE);
-    //等待传输结束
+
+    //等待结束
     while(DMA_GetFlagStatus(DMA1_FLAG_TC3)==RESET) {
         if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
             portYIELD();
         }
     }
+
+    // 关掉DMA
     DMA_Cmd(DMA1_Channel3,DISABLE);
-    DMA_DeInit(DMA1_Channel3);
 }
 void OLED_Clear() {
     memset(oledFramebuffer,0x00,OLED_FRAMEBUFFER_SIZE);
@@ -158,15 +177,15 @@ void OLED_SetPixel(SGUI_INT x,SGUI_INT y,SGUI_COLOR color) {
 
 }
 SGUI_COLOR OLED_GetPixel(SGUI_INT x,SGUI_INT y) {
-	y = y&0x3F;
-	uint8_t* origin = oledFramebuffer+y*OLED_SCREEN_WIDTH/OLED_PIXEL_PER_BYTE+x/OLED_PIXEL_PER_BYTE;
-	if(x&0x01){
-		// 奇数列 ==> 取原有数据低四位
-		return *origin & 0x0F;
-	}else{
-		// 偶数列 ==> 取原有数据高四位
-		return (*origin & 0xF0)>>4;
-	}
+    y = y&0x3F;
+    uint8_t* origin = oledFramebuffer+y*OLED_SCREEN_WIDTH/OLED_PIXEL_PER_BYTE+x/OLED_PIXEL_PER_BYTE;
+    if(x&0x01) {
+        // 奇数列 ==> 取原有数据低四位
+        return *origin & 0x0F;
+    } else {
+        // 偶数列 ==> 取原有数据高四位
+        return (*origin & 0xF0)>>4;
+    }
 }
 void OLED_SyncBuffer() {
     OLED_SendBuffer(OLED_DISPLAY,oledFramebuffer,OLED_FRAMEBUFFER_SIZE);
