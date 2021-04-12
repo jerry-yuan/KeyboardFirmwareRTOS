@@ -184,8 +184,8 @@ const uint8_t JKBD_StdKbdReportDescriptor[JKBD_SIZ_STDKBD_REPORT_DESC] = {
     /**    {BYTE2~8:其他按键输出}    */
     0x95, 0x06,         //     REPORT_COUNT (6)                     [按键:同时允许6个按键同时按下,6个报告]
     0x75, 0x08,         //     REPORT_SIZE (8)                      [按键:每个按键描述符由一个字节组成]
-    0x15, 0x00,         //   LOGICAL_MINIMUM (0) [按键描述符最小为1]
-    0x26, 0xff, 0x00,   //   LOGICAL_MAXIMUM (255)[按键描述符最大为255]
+    0x15, 0x00,         //     LOGICAL_MINIMUM (0) [按键描述符最小为1]
+    0x26, 0xff, 0x00,   //     LOGICAL_MAXIMUM (255)[按键描述符最大为255]
     0x19, 0x00,         //     USAGE_MINIMUM (Reserved (no event indicated))    [最小值为保留按键]
     0x29, 0x65,         //     USAGE_MAXIMUM (Keyboard Application)             [最大值为键盘应用]
     0x81, 0x00,         //     INPUT (Data,Ary,Abs)                 [按键为输入(相对于主机),传输数据,数组,绝对值]
@@ -196,7 +196,7 @@ const uint8_t JKBD_StdKbdReportDescriptor[JKBD_SIZ_STDKBD_REPORT_DESC] = {
     0x15, 0x00,         //     LOGICAL_MINIMUM (0)                  [逻辑最小0]
     0x25, 0x01,         //     LOGICAL_MAXIMUM (1)                  [逻辑最大1]
     0x19, 0x01,         //     USAGE_MINIMUM (Num Lock)             [最小位是NumLock灯]
-    0x29, 0x08,         //     USAGE_MAXIMUM (Do Not Distrurb)            [最大位是CapsLock灯]
+    0x29, 0x08,         //     USAGE_MAXIMUM (Do Not Distrurb)      [最大位是CapsLock灯]
     0x91, 0x02,         //     OUTPUT (Data,Var,Abs)                [LED位输出(相对于主机),传输数据,变量,绝对值]
     0xc0                // END_COLLECTION
 };

@@ -162,8 +162,7 @@ void USB_Cable_Config (FunctionalState NewState) {
                   len: 缓冲区长度
 * Output        : None.
 * Return value  : None.
-******************************************************
-*************************/
+*******************************************************************************/
 void JKBD_Send(uint8_t* buf,uint8_t len,uint8_t endpoint) {
 	while(GetEPTxStatus(endpoint) != EP_TX_NAK);
     /*copy mouse position info in ENDP1 Tx Packet Memory Area*/

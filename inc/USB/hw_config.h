@@ -31,7 +31,7 @@
 #define __HW_CONFIG_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "platform_config.h"
+#include "stm32f10x.h"
 #include "usb_type.h"
 
 #ifdef __cplusplus
@@ -45,13 +45,12 @@ extern "C" {
     /* Exported functions ------------------------------------------------------- */
     void Set_System(void);
     void Set_USBClock(void);
-    void GPIO_AINConfig(void);
     void Enter_LowPowerMode(void);
     void Leave_LowPowerMode(void);
     void USB_Interrupts_Config(void);
     void USB_Cable_Config (FunctionalState NewState);
 
-    void USB_Port_Set(u8 enable);
+    void USB_Port_Set(uint8_t enable);
     void JKBD_StdKbdSend();
     void JKBD_ExtKbdSend();
     void JKBD_Send(uint8_t* buf,uint8_t len,uint8_t endpoint);

@@ -166,7 +166,6 @@
 		<Unit filename="inc\task\rtc.h" />
 		<Unit filename="inc\task\usbdevicestate.h" />
 		<Unit filename="inc\USB\hw_config.h" />
-		<Unit filename="inc\USB\platform_config.h" />
 		<Unit filename="inc\USB\usb.h" />
 		<Unit filename="inc\USB\usb_conf.h" />
 		<Unit filename="inc\USB\usb_desc.h" />
