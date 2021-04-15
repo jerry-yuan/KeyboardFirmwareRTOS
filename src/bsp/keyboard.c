@@ -8,7 +8,7 @@ void KEY_Initialize() {
     // 扫描线的初始化
     GPIO_InitTypeDef KEY_SCAN;
     KEY_SCAN.GPIO_Mode=GPIO_Mode_Out_PP;
-    KEY_SCAN.GPIO_Speed=GPIO_Speed_10MHz;
+    KEY_SCAN.GPIO_Speed=GPIO_Speed_2MHz;
     KEY_SCAN.GPIO_Pin=KEY_SCAN_CLK|KEY_SCAN_CLR|KEY_SCAN_DATA|KEY_SCAN_EN|KEY_SCAN_RCLK;
     GPIO_Init(GPIOC,&KEY_SCAN);
 

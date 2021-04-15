@@ -11,6 +11,7 @@
 				<Option output="bin\Debug\KeyboardFirmwareRTOS.elf" />
 				<Option object_output="obj\Debug\" />
 				<Option type="0" />
+				<Option create_hex="1" />
 				<Option compiler="armgcc_eb" />
 				<Option projectDeviceOptionsRelation="0" />
 				<Compiler>
@@ -32,7 +33,6 @@
 					<Add option="-Wa,--gdwarf-2" />
 				</Assembler>
 				<Linker>
-					<Add option="-u _printf_float" />
 					<Add option="-Wl,--gc-sections" />
 				</Linker>
 			</Target>
@@ -83,6 +83,7 @@
 			<Add directory=".\SPL\src" />
 		</Compiler>
 		<Linker>
+			<Add option="-u _printf_float" />
 			<Add option="-eb_lib=n" />
 			<Add option="-eb_start_files" />
 			<Add option="-Wl,--gc-sections" />
