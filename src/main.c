@@ -14,19 +14,20 @@
 static TaskHandle_t hBootstrap;
 
 static void bootstrap(void) {
-    taskENTER_CRITICAL();
-    USB_Initialize();
+    //taskENTER_CRITICAL();
 
+	guiTaskInitialize();
     USBDeviceStateTaskInitialize();
-    keyScanTaskInitialize();
-    guiTaskInitialize();
     BgLightTaskTaskInitialize();
-    keyboardTaskInitialize();
 
+    keyScanTaskInitialize();
+    keyboardTaskInitialize();
     RTCTaskInitialize();
 
+	USB_Initialize();
+
     vTaskDelete(hBootstrap);
-    taskEXIT_CRITICAL();
+    //taskEXIT_CRITICAL();
 }
 int main(void) {
     BaseType_t xReturn=pdPASS;

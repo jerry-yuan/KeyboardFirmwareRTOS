@@ -12,11 +12,11 @@
 
 void BSP_Initialize(){
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+    USART_Initialize();
+    STAT_Initialize();
     Delay_TimerInitialize();
-    USART_Config();
     TIM_Initialize();
     RTC_Initialize();
-    STAT_Initialize();
     OLED_Initialize();
     LED_Initialize();
     W25X_Initialize();
