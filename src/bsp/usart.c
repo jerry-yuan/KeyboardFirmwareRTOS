@@ -1,12 +1,24 @@
 #include "bsp/usart.h"
+#include "lib/FIFOBuffer.h"
 #include <FreeRTOS.h>
 #include <event_groups.h>
 #include <semphr.h>
+#include <string.h>
 
-static SemaphoreHandle_t  xTxWait  = NULL;
-static SemaphoreHandle_t  xTxMutex = NULL;
+static SemaphoreHandle_t	xTxWait  = NULL;
+static SemaphoreHandle_t	xTxMutex = NULL;
+static SemaphoreHandle_t    xRxFlag  = NULL;
+ FIFO_t*				pRxFIFO	 = NULL;
 
 void USART_Initialize(void) {
+    // 初始化信号量
+    xTxMutex = xSemaphoreCreateCounting(1,1);
+    xTxWait  = xSemaphoreCreateCounting(1,0);
+    xRxFlag  = xSemaphoreCreateCounting(1,0);
+
+    pRxFIFO  = pvPortMalloc(sizeof(FIFO_t));
+
+    FIFO_Inititalize(pRxFIFO,pvPortMalloc(1200),1200);
     /**
      * 初始化GPIO
      */
@@ -42,7 +54,6 @@ void USART_Initialize(void) {
 
     // 使能串口
     USART_Cmd(USART1, ENABLE);
-    USART_ClearFlag(USART1, USART_FLAG_TC);
 
     /**
      * 初始化USART DMA
@@ -53,27 +64,33 @@ void USART_Initialize(void) {
     DMA_InitTypeDef DMA_InitStructure;
 
     DMA_InitStructure.DMA_PeripheralBaseAddr	= (uint32_t)&USART1->DR;
-    DMA_InitStructure.DMA_MemoryBaseAddr		= (uint32_t)0;
-    DMA_InitStructure.DMA_BufferSize			= (uint32_t)0;
     DMA_InitStructure.DMA_PeripheralInc			= DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc				= DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize	= DMA_PeripheralDataSize_Byte;
     DMA_InitStructure.DMA_MemoryDataSize		= DMA_MemoryDataSize_Byte;
-    DMA_InitStructure.DMA_Mode					= DMA_Mode_Normal;
     DMA_InitStructure.DMA_Priority				= DMA_Priority_VeryHigh;
     DMA_InitStructure.DMA_M2M					= DMA_M2M_Disable;
 
     // 初始化Tx的DMA
+    DMA_InitStructure.DMA_Mode					= DMA_Mode_Normal;
+    DMA_InitStructure.DMA_MemoryBaseAddr		= (uint32_t)0;
+    DMA_InitStructure.DMA_BufferSize			= (uint32_t)0;
     DMA_InitStructure.DMA_DIR					= DMA_DIR_PeripheralDST;
     DMA_Init(DMA1_Channel4,&DMA_InitStructure);
 
     // 初始化Rx的DMA
+    DMA_InitStructure.DMA_Mode					= DMA_Mode_Circular;
+    DMA_InitStructure.DMA_MemoryBaseAddr		= (uint32_t)pRxFIFO->pBuffer;
+    DMA_InitStructure.DMA_BufferSize			= (uint32_t)pRxFIFO->uiSize;
     DMA_InitStructure.DMA_DIR					= DMA_DIR_PeripheralSRC;
     DMA_Init(DMA1_Channel5,&DMA_InitStructure);
 
     // 使能DMA通道请求
     USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
     USART_DMACmd(USART1, USART_DMAReq_Rx, ENABLE);
+
+    // 使能DMA1_Channel5(Rx)
+    DMA_Cmd(DMA1_Channel5, ENABLE);
 
     // 初始化DMA中断配置
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -89,27 +106,28 @@ void USART_Initialize(void) {
     NVIC_InitStructure.NVIC_IRQChannel						= DMA1_Channel5_IRQn;
     NVIC_Init(&NVIC_InitStructure);
 
+    // 初始化USART中断
+    NVIC_InitStructure.NVIC_IRQChannel						= USART1_IRQn;
+    NVIC_Init(&NVIC_InitStructure);
+
     // 清除中断标志
     DMA_ClearITPendingBit(DMA1_IT_GL4 | DMA1_IT_GL5);
-	USART_ClearITPendingBit(USART1, USART_IT_TC);
+    USART_ClearITPendingBit(USART1, USART_IT_IDLE);
 
-    // 使能DMA中断
+    // 使能中断
     DMA_ITConfig(DMA1_Channel4, DMA_IT_TC, ENABLE);
-
-    // 初始化信号量
-    xTxMutex = xSemaphoreCreateCounting(1,1);
-    xTxWait  = xSemaphoreCreateCounting(1,0);
+    USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 }
 void USART_SendBuffer(const uint8_t* pBuffer, const uint32_t length) {
-    if(length < 1){
-		return;
+    if(length < 1) {
+        return;
     }
     xSemaphoreTake(xTxMutex, portMAX_DELAY);
     // 清除中断
     DMA_ClearITPendingBit(DMA1_IT_GL4);
     DMA_ClearFlag(DMA1_FLAG_GL4);
 
-	//关闭DMA
+    //关闭DMA
     DMA_Cmd(DMA1_Channel4, DISABLE);
 
     // 设置DMA通道
@@ -125,19 +143,7 @@ void USART_SendBuffer(const uint8_t* pBuffer, const uint32_t length) {
     //while(DMA_GetFlagStatus(DMA1_FLAG_TC4)==RESET);
 
     // 归还互斥信号量
-	xSemaphoreGive(xTxMutex);
-}
-
-void USART1_IRQHandler(void){
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-	if(USART_GetITStatus(USART1,USART_IT_TC) != RESET){
-		USART_ClearITPendingBit(USART1, USART_IT_TC);
-		// 关掉DMA
-		DMA_Cmd(DMA1_Channel4, DISABLE);
-		if(xTxWait != NULL)
-			xSemaphoreGiveFromISR(xTxWait, &xHigherPriorityTaskWoken);
-	}
+    xSemaphoreGive(xTxMutex);
 }
 
 void DMA1_Channel4_IRQHandler(void) {
@@ -146,68 +152,51 @@ void DMA1_Channel4_IRQHandler(void) {
     if(DMA_GetITStatus(DMA1_IT_TC4) != RESET) {
         DMA_ClearITPendingBit(DMA1_IT_TC4);
         // 关掉DMA
-		DMA_Cmd(DMA1_Channel4, DISABLE);
+        DMA_Cmd(DMA1_Channel4, DISABLE);
         if(xTxWait != NULL)
-			xSemaphoreGiveFromISR(xTxWait, &xHigherPriorityTaskWoken);
+            xSemaphoreGiveFromISR(xTxWait, &xHigherPriorityTaskWoken);
     }
 }
 
-void USART_ReceiveBuffer(uint8_t* pBuffer, const uint32_t length) {
-    // 清除中断
-    DMA_ClearITPendingBit(DMA1_IT_GL5);
-    DMA_ClearFlag(DMA1_FLAG_GL5);
+void USART1_IRQHandler(void) {
+	uint32_t temp = 0;
+    if(USART_GetITStatus(USART1,USART_IT_IDLE) != RESET) {
+        pRxFIFO->uiIn = pRxFIFO->uiSize-DMA_GetCurrDataCounter(DMA1_Channel5);
+		FIFO_Notify(pRxFIFO);
+        temp = USART1->SR;
+        temp = USART1->DR;
 
-    // 设置DMA通道
-    DMA1_Channel5->CNDTR	= (uint32_t)length;		//拷贝数量
-    DMA1_Channel5->CMAR		= (uint32_t)pBuffer;	//来源地址
-
-    //启动DMA
-    DMA_Cmd(DMA1_Channel5, ENABLE);
-
-    while(DMA_GetFlagStatus(DMA1_FLAG_TC5)==RESET);
-
-    // 关掉DMA
-    DMA_Cmd(DMA1_Channel5, DISABLE);
-}
-
-void DMA1_Channel5_IRQHandler(void) {
-    if(DMA_GetITStatus(DMA1_IT_TC5) != RESET) {
-        DMA_ClearITPendingBit(DMA1_IT_TC5);
-        DMA_Cmd(DMA1_Channel5, DISABLE);
-        DMA1_Channel5->CNDTR = 0;
+        USART_ClearITPendingBit(USART1,USART_IT_IDLE);
         //xSemaphoreGiveFromISR(xTxMutex);
     }
 }
 
 int _write(int fd, char *ptr,int len) {
-    if(__get_CONTROL()==0){
-		while((DMA1_Channel4->CCR & DMA_CCR1_EN) && DMA_GetFlagStatus(DMA1_FLAG_TC4) == RESET);
-	    int i=0;
-	    USART_SendData(USART1, 'C');
-	    while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-		while(*ptr && (i<len)) {
-			USART_SendData(USART1, (uint8_t) (*ptr++));
-			while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-			i++;
-		}
-		return i;
-    }else{
-    	USART_SendBuffer((uint8_t*)ptr,(uint32_t)len);
-		return len;
+    if(__get_CONTROL()==0) {
+        while((DMA1_Channel4->CCR & DMA_CCR1_EN) && DMA_GetFlagStatus(DMA1_FLAG_TC4) == RESET);
+        int i=0;
+        USART_SendData(USART1, 'C');
+        while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
+        while(*ptr && (i<len)) {
+            USART_SendData(USART1, (uint8_t) (*ptr++));
+            while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
+            i++;
+        }
+        return i;
+    } else {
+        USART_SendBuffer((uint8_t*)ptr,(uint32_t)len);
+        return len;
     }
 
 
 
 }
-/*
 int _read(int fd,char *ptr,int len) {
-    int i=0;
-    while(i<len) {
-        / * 等待串口输入数据 * /
+	return FIFO_Read(pRxFIFO,(uint8_t*)ptr,len);
+    /*while(i<len) {
         while (USART_GetFlagStatus(DEBUG_USARTx, USART_FLAG_RXNE) == RESET);
 
         *ptr++=(int)USART_ReceiveData(DEBUG_USARTx);
         i++;
-    }
-    return i;
-}*/
+    }*/
+}
