@@ -1,153 +1,202 @@
 #include "bsp/usart.h"
+#include "lib/FIFOBuffer.h"
+#include <FreeRTOS.h>
+#include <event_groups.h>
+#include <semphr.h>
+#include <string.h>
 
-/**
- * @brief  配置嵌套向量中断控制器NVIC
- * @param  无
- * @retval 无
- */
-/*static void NVIC_Configuration(void) {
-    NVIC_InitTypeDef NVIC_InitStructure;
+static SemaphoreHandle_t	xTxWait  = NULL;
+static SemaphoreHandle_t	xTxMutex = NULL;
+static SemaphoreHandle_t    xRxFlag  = NULL;
+ FIFO_t*				pRxFIFO	 = NULL;
 
-    / * 嵌套向量中断控制器组选择 * /
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+void USART_Initialize(void) {
+    // 初始化信号量
+    xTxMutex = xSemaphoreCreateCounting(1,1);
+    xTxWait  = xSemaphoreCreateCounting(1,0);
+    xRxFlag  = xSemaphoreCreateCounting(1,0);
 
-    / * 配置USART为中断源 * /
-    NVIC_InitStructure.NVIC_IRQChannel = DEBUG_USART_IRQ;
-    / * 抢断优先级* /
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    / * 子优先级 * /
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
-    / * 使能中断 * /
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    / * 初始化配置NVIC * /
-    NVIC_Init(&NVIC_InitStructure);
-}*/
+    pRxFIFO  = pvPortMalloc(sizeof(FIFO_t));
 
-/**
- * @brief  USART GPIO 配置,工作参数配置
- * @param  无
- * @retval 无
- */
-
-void USART_Config(void) {
+    FIFO_Inititalize(pRxFIFO,pvPortMalloc(1200),1200);
+    /**
+     * 初始化GPIO
+     */
+    // 开启GPIOA的时钟
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitStructure.GPIO_Speed 	= GPIO_Speed_50MHz;
+
+    // TxD -> PA9
+    GPIO_InitStructure.GPIO_Mode	= GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Pin		= GPIO_Pin_9;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    // RxD -> PA10
+    GPIO_InitStructure.GPIO_Mode	= GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Pin		= GPIO_Pin_10;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    /**
+     * 初始化USART
+     */
+    // 开启USART1时钟
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    // 初始化USART1
     USART_InitTypeDef USART_InitStructure;
-
-    // 打开串口GPIO的时钟
-    DEBUG_USART_GPIO_APBxClkCmd(DEBUG_USART_GPIO_CLK, ENABLE);
-
-    // 打开串口外设的时钟
-    DEBUG_USART_APBxClkCmd(DEBUG_USART_CLK, ENABLE);
-
-    // 将USART Tx的GPIO配置为推挽复用模式
-    GPIO_InitStructure.GPIO_Pin = DEBUG_USART_TX_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(DEBUG_USART_TX_GPIO_PORT, &GPIO_InitStructure);
-
-    // 将USART Rx的GPIO配置为浮空输入模式
-    GPIO_InitStructure.GPIO_Pin = DEBUG_USART_RX_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(DEBUG_USART_RX_GPIO_PORT, &GPIO_InitStructure);
-
-    // 配置串口的工作参数
-    // 配置波特率
-    USART_InitStructure.USART_BaudRate = DEBUG_USART_BAUDRATE;
-    // 配置 针数据字长
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    // 配置停止位
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    // 配置校验位
-    USART_InitStructure.USART_Parity = USART_Parity_No ;
-    // 配置硬件流控制
-    USART_InitStructure.USART_HardwareFlowControl =
-        USART_HardwareFlowControl_None;
-    // 配置工作模式，收发一起
-    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-    // 完成串口的初始化配置
-    USART_Init(DEBUG_USARTx, &USART_InitStructure);
-
-    // 串口中断优先级配置
-    //NVIC_Configuration();
-
-    // 使能串口接收中断
-    //USART_ITConfig(DEBUG_USARTx, USART_IT_RXNE, ENABLE);
+    USART_InitStructure.USART_BaudRate 				= 115200;
+    USART_InitStructure.USART_WordLength			= USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits				= USART_StopBits_1;
+    USART_InitStructure.USART_Parity				= USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl 	= USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode 					= USART_Mode_Rx | USART_Mode_Tx;
+    USART_Init(USART1, &USART_InitStructure);
 
     // 使能串口
-    USART_Cmd(DEBUG_USARTx, ENABLE);
+    USART_Cmd(USART1, ENABLE);
+
+    /**
+     * 初始化USART DMA
+     */
+    // 开启DMA1时钟
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1,ENABLE);
+    // 初始化DMA初始化结构
+    DMA_InitTypeDef DMA_InitStructure;
+
+    DMA_InitStructure.DMA_PeripheralBaseAddr	= (uint32_t)&USART1->DR;
+    DMA_InitStructure.DMA_PeripheralInc			= DMA_PeripheralInc_Disable;
+    DMA_InitStructure.DMA_MemoryInc				= DMA_MemoryInc_Enable;
+    DMA_InitStructure.DMA_PeripheralDataSize	= DMA_PeripheralDataSize_Byte;
+    DMA_InitStructure.DMA_MemoryDataSize		= DMA_MemoryDataSize_Byte;
+    DMA_InitStructure.DMA_Priority				= DMA_Priority_VeryHigh;
+    DMA_InitStructure.DMA_M2M					= DMA_M2M_Disable;
+
+    // 初始化Tx的DMA
+    DMA_InitStructure.DMA_Mode					= DMA_Mode_Normal;
+    DMA_InitStructure.DMA_MemoryBaseAddr		= (uint32_t)0;
+    DMA_InitStructure.DMA_BufferSize			= (uint32_t)0;
+    DMA_InitStructure.DMA_DIR					= DMA_DIR_PeripheralDST;
+    DMA_Init(DMA1_Channel4,&DMA_InitStructure);
+
+    // 初始化Rx的DMA
+    DMA_InitStructure.DMA_Mode					= DMA_Mode_Circular;
+    DMA_InitStructure.DMA_MemoryBaseAddr		= (uint32_t)pRxFIFO->pBuffer;
+    DMA_InitStructure.DMA_BufferSize			= (uint32_t)pRxFIFO->uiSize;
+    DMA_InitStructure.DMA_DIR					= DMA_DIR_PeripheralSRC;
+    DMA_Init(DMA1_Channel5,&DMA_InitStructure);
+
+    // 使能DMA通道请求
+    USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
+    USART_DMACmd(USART1, USART_DMAReq_Rx, ENABLE);
+
+    // 使能DMA1_Channel5(Rx)
+    DMA_Cmd(DMA1_Channel5, ENABLE);
+
+    // 初始化DMA中断配置
+    NVIC_InitTypeDef NVIC_InitStructure;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority	= 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority			= 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd					= ENABLE;
+
+    // 初始化Tx DMA中断
+    NVIC_InitStructure.NVIC_IRQChannel						= DMA1_Channel4_IRQn;
+    NVIC_Init(&NVIC_InitStructure);
+
+    // 初始化Rx DMA中断
+    NVIC_InitStructure.NVIC_IRQChannel						= DMA1_Channel5_IRQn;
+    NVIC_Init(&NVIC_InitStructure);
+
+    // 初始化USART中断
+    NVIC_InitStructure.NVIC_IRQChannel						= USART1_IRQn;
+    NVIC_Init(&NVIC_InitStructure);
+
+    // 清除中断标志
+    DMA_ClearITPendingBit(DMA1_IT_GL4 | DMA1_IT_GL5);
+    USART_ClearITPendingBit(USART1, USART_IT_IDLE);
+
+    // 使能中断
+    DMA_ITConfig(DMA1_Channel4, DMA_IT_TC, ENABLE);
+    USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 }
-
-/*****************  发送一个字节 **********************/
-void Usart_SendByte( USART_TypeDef * pUSARTx, uint8_t ch) {
-    /* 发送一个字节数据到USART */
-    USART_SendData(pUSARTx,ch);
-
-    /* 等待发送数据寄存器为空 */
-    while (USART_GetFlagStatus(pUSARTx, USART_FLAG_TXE) == RESET);
-}
-
-/****************** 发送8位的数组 ************************/
-void Usart_SendArray( USART_TypeDef * pUSARTx, uint8_t *array, uint16_t num) {
-    uint8_t i;
-
-    for(i=0; i<num; i++) {
-        /* 发送一个字节数据到USART */
-        Usart_SendByte(pUSARTx,array[i]);
-
+void USART_SendBuffer(const uint8_t* pBuffer, const uint32_t length) {
+    if(length < 1) {
+        return;
     }
-    /* 等待发送完成 */
-    while(USART_GetFlagStatus(pUSARTx,USART_FLAG_TC)==RESET);
+    xSemaphoreTake(xTxMutex, portMAX_DELAY);
+    // 清除中断
+    DMA_ClearITPendingBit(DMA1_IT_GL4);
+    DMA_ClearFlag(DMA1_FLAG_GL4);
+
+    //关闭DMA
+    DMA_Cmd(DMA1_Channel4, DISABLE);
+
+    // 设置DMA通道
+    DMA1_Channel4->CNDTR	= (uint32_t)length;		//拷贝数量
+    DMA1_Channel4->CMAR		= (uint32_t)pBuffer;	//来源地址
+
+    //启动DMA
+    DMA_Cmd(DMA1_Channel4, ENABLE);
+
+    // 堵死当前任务等待DMA干活,但CPU切到其他任务该干嘛干嘛去
+    // 等干完再释放出来
+    xSemaphoreTake(xTxWait,portMAX_DELAY);
+    //while(DMA_GetFlagStatus(DMA1_FLAG_TC4)==RESET);
+
+    // 归还互斥信号量
+    xSemaphoreGive(xTxMutex);
 }
 
-/*****************  发送字符串 **********************/
-void Usart_SendString( USART_TypeDef * pUSARTx, char *str) {
-    unsigned int k=0;
-    do {
-        Usart_SendByte( pUSARTx, *(str + k) );
-        k++;
-    } while(*(str + k)!='\0');
+void DMA1_Channel4_IRQHandler(void) {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    /* 等待发送完成 */
-    while(USART_GetFlagStatus(pUSARTx,USART_FLAG_TC)==RESET)
-    {}
+    if(DMA_GetITStatus(DMA1_IT_TC4) != RESET) {
+        DMA_ClearITPendingBit(DMA1_IT_TC4);
+        // 关掉DMA
+        DMA_Cmd(DMA1_Channel4, DISABLE);
+        if(xTxWait != NULL)
+            xSemaphoreGiveFromISR(xTxWait, &xHigherPriorityTaskWoken);
+    }
 }
 
-/*****************  发送一个16位数 **********************/
-void Usart_SendHalfWord( USART_TypeDef * pUSARTx, uint16_t ch) {
-    uint8_t temp_h, temp_l;
+void USART1_IRQHandler(void) {
+	uint32_t temp = 0;
+    if(USART_GetITStatus(USART1,USART_IT_IDLE) != RESET) {
+        pRxFIFO->uiIn = pRxFIFO->uiSize-DMA_GetCurrDataCounter(DMA1_Channel5);
+		FIFO_Notify(pRxFIFO);
+        temp = USART1->SR;
+        temp = USART1->DR;
 
-    /* 取出高八位 */
-    temp_h = (ch&0XFF00)>>8;
-    /* 取出低八位 */
-    temp_l = ch&0XFF;
-
-    /* 发送高八位 */
-    USART_SendData(pUSARTx,temp_h);
-    while (USART_GetFlagStatus(pUSARTx, USART_FLAG_TXE) == RESET);
-
-    /* 发送低八位 */
-    USART_SendData(pUSARTx,temp_l);
-    while (USART_GetFlagStatus(pUSARTx, USART_FLAG_TXE) == RESET);
+        USART_ClearITPendingBit(USART1,USART_IT_IDLE);
+        //xSemaphoreGiveFromISR(xTxMutex);
+    }
 }
 
 int _write(int fd, char *ptr,int len) {
-    int i=0;
-    while(*ptr && (i<len)) {
-        USART_SendData(DEBUG_USARTx, (uint8_t) (*ptr++));
-        while (USART_GetFlagStatus(DEBUG_USARTx, USART_FLAG_TXE) == RESET);
-        i++;
+    if(__get_CONTROL()==0) {
+        while((DMA1_Channel4->CCR & DMA_CCR1_EN) && DMA_GetFlagStatus(DMA1_FLAG_TC4) == RESET);
+        int i=0;
+        USART_SendData(USART1, 'C');
+        while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
+        while(*ptr && (i<len)) {
+            USART_SendData(USART1, (uint8_t) (*ptr++));
+            while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
+            i++;
+        }
+        return i;
+    } else {
+        USART_SendBuffer((uint8_t*)ptr,(uint32_t)len);
+        return len;
     }
-    return i;
+
+
+
 }
-/*
 int _read(int fd,char *ptr,int len) {
-    int i=0;
-    while(i<len) {
-        / * 等待串口输入数据 * /
+	return FIFO_Read(pRxFIFO,(uint8_t*)ptr,len);
+    /*while(i<len) {
         while (USART_GetFlagStatus(DEBUG_USARTx, USART_FLAG_RXNE) == RESET);
 
         *ptr++=(int)USART_ReceiveData(DEBUG_USARTx);
         i++;
-    }
-    return i;
-}*/
+    }*/
+}

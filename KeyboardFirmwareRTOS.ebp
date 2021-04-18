@@ -142,6 +142,7 @@
 		<Unit filename="inc\bsp\w25x.h" />
 		<Unit filename="inc\delay.h" />
 		<Unit filename="inc\FreeRTOSConfig.h" />
+		<Unit filename="inc\lib\FIFOBuffer.h" />
 		<Unit filename="inc\lib\GUIToolLib.h" />
 		<Unit filename="inc\lib\keyboard.h" />
 		<Unit filename="inc\resources\Font.h" />
@@ -293,6 +294,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\delay.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\lib\FIFOBuffer.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\lib\GUIToolLib.c">
