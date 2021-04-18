@@ -20,24 +20,6 @@ void USART_Initialize(void) {
 
     FIFO_Inititalize(pRxFIFO,pvPortMalloc(1200),1200);
     /**
-     * 初始化GPIO
-     */
-    // 开启GPIOA的时钟
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-    GPIO_InitTypeDef GPIO_InitStructure;
-    GPIO_InitStructure.GPIO_Speed 	= GPIO_Speed_50MHz;
-
-    // TxD -> PA9
-    GPIO_InitStructure.GPIO_Mode	= GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Pin		= GPIO_Pin_9;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-    // RxD -> PA10
-    GPIO_InitStructure.GPIO_Mode	= GPIO_Mode_IN_FLOATING;
-    GPIO_InitStructure.GPIO_Pin		= GPIO_Pin_10;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-    /**
      * 初始化USART
      */
     // 开启USART1时钟
@@ -54,6 +36,24 @@ void USART_Initialize(void) {
 
     // 使能串口
     USART_Cmd(USART1, ENABLE);
+
+    /**
+     * 初始化GPIO
+     */
+    // 开启GPIOA的时钟
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitStructure.GPIO_Speed 	= GPIO_Speed_50MHz;
+
+    // TxD -> PA9
+    GPIO_InitStructure.GPIO_Mode	= GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Pin		= GPIO_Pin_9;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    // RxD -> PA10
+    GPIO_InitStructure.GPIO_Mode	= GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Pin		= GPIO_Pin_10;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
 
     /**
      * 初始化USART DMA
