@@ -145,6 +145,7 @@
 		<Unit filename="inc\lib\FIFOBuffer.h" />
 		<Unit filename="inc\lib\GUIToolLib.h" />
 		<Unit filename="inc\lib\keyboard.h" />
+		<Unit filename="inc\lib\utils.h" />
 		<Unit filename="inc\resources\Font.h" />
 		<Unit filename="inc\resources\fontawesome.h" />
 		<Unit filename="inc\screen\calculator\calculator.h" />
@@ -428,6 +429,7 @@
 		<Unit filename="..\simplegui\GUI\inc\SGUI_ScrollBar.h" />
 		<Unit filename="..\simplegui\GUI\inc\SGUI_Text.h" />
 		<Unit filename="..\simplegui\GUI\inc\SGUI_Typedef.h" />
+		<Unit filename="..\simplegui\GUI\inc\SGUI_Utility.h" />
 		<Unit filename="..\simplegui\GUI\inc\SGUI_VariableBox.h" />
 		<Unit filename="..\simplegui\GUI\src\SGUI_Basic.c">
 			<Option compilerVar="CC" />

@@ -1,7 +1,6 @@
 #include <lib/FIFOBuffer.h>
 #include <string.h>
-#define MIN(A,B) (A)>(B)?(B):(A)
-
+#include <lib/utils.h>
 void FIFO_Inititalize(FIFO_t* pFifo,uint8_t* pBuffer,uint16_t uiSize){
 	pFifo->pBuffer	= pBuffer;
 	pFifo->uiIn		= 0;
@@ -34,6 +33,13 @@ uint16_t FIFO_Read(FIFO_t* pFifo,uint8_t* pBuffer,uint16_t length){
 	return readableLength;
 
 }
+
+uint8_t FIFO_ReadByte(FIFO_t* pFifo){
+	uint8_t byte;
+	FIFO_Read(pFifo,&byte,1);
+	return byte;
+}
+
 void FIFO_Clear(FIFO_t* pFifo){
 	pFifo->uiOut=pFifo->uiIn;
 }

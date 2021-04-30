@@ -1,5 +1,6 @@
 #include "bsp/usart.h"
 #include "lib/FIFOBuffer.h"
+#include "lib/utils.h"
 #include <FreeRTOS.h>
 #include <event_groups.h>
 #include <semphr.h>
@@ -8,7 +9,7 @@
 static SemaphoreHandle_t	xTxWait  = NULL;
 static SemaphoreHandle_t	xTxMutex = NULL;
 static SemaphoreHandle_t    xRxFlag  = NULL;
- FIFO_t*				pRxFIFO	 = NULL;
+FIFO_t*						pRxFIFO	 = NULL;
 
 void USART_Initialize(void) {
     // 初始化信号量
@@ -26,7 +27,7 @@ void USART_Initialize(void) {
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
     // 初始化USART1
     USART_InitTypeDef USART_InitStructure;
-    USART_InitStructure.USART_BaudRate 				= 115200;
+    USART_InitStructure.USART_BaudRate 				= 460800;
     USART_InitStructure.USART_WordLength			= USART_WordLength_8b;
     USART_InitStructure.USART_StopBits				= USART_StopBits_1;
     USART_InitStructure.USART_Parity				= USART_Parity_No;
@@ -118,9 +119,10 @@ void USART_Initialize(void) {
     DMA_ITConfig(DMA1_Channel4, DMA_IT_TC, ENABLE);
     USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 }
-void USART_SendBuffer(const uint8_t* pBuffer, const uint32_t length) {
+void USART_SendBuffer(const uint8_t* pBuffer,uint16_t length) {
     if(length < 1) {
-        return;
+        pBuffer = (uint8_t*)"WARNING:TOO LONG TO SEND BUFFER!\r\n";
+        length  = 34;
     }
     xSemaphoreTake(xTxMutex, portMAX_DELAY);
     // 清除中断
@@ -131,7 +133,7 @@ void USART_SendBuffer(const uint8_t* pBuffer, const uint32_t length) {
     DMA_Cmd(DMA1_Channel4, DISABLE);
 
     // 设置DMA通道
-    DMA1_Channel4->CNDTR	= (uint32_t)length;		//拷贝数量
+    DMA1_Channel4->CNDTR	= (uint16_t)length;		//拷贝数量
     DMA1_Channel4->CMAR		= (uint32_t)pBuffer;	//来源地址
 
     //启动DMA
@@ -165,28 +167,32 @@ void USART1_IRQHandler(void) {
 		FIFO_Notify(pRxFIFO);
         temp = USART1->SR;
         temp = USART1->DR;
-
         USART_ClearITPendingBit(USART1,USART_IT_IDLE);
         //xSemaphoreGiveFromISR(xTxMutex);
     }
 }
 
 int _write(int fd, char *ptr,int len) {
+    uint16_t tlen;
+    int totalWrite=0;
     if(__get_CONTROL()==0) {
         while((DMA1_Channel4->CCR & DMA_CCR1_EN) && DMA_GetFlagStatus(DMA1_FLAG_TC4) == RESET);
-        int i=0;
         USART_SendData(USART1, 'C');
         while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-        while(*ptr && (i<len)) {
+        while(*ptr && (totalWrite<len)) {
             USART_SendData(USART1, (uint8_t) (*ptr++));
             while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-            i++;
+            totalWrite++;
         }
-        return i;
     } else {
-        USART_SendBuffer((uint8_t*)ptr,(uint32_t)len);
-        return len;
+        while(len>0) {
+            tlen = MIN(0xFFFF,len);
+            USART_SendBuffer((uint8_t*)ptr,tlen);
+            len -= tlen;
+            totalWrite+=tlen;
+        }
     }
+    return totalWrite;
 
 
 
