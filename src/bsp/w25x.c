@@ -90,7 +90,7 @@ void W25X_Initialize() {
 
 }
 
-void W25X_ReceiveBuffer(void* buffer,uint32_t length){
+void W25X_ReceiveBuffer(void* buffer,uint16_t length){
 	uint8_t dummy = 0xFF;
 	// 清除中断
 	DMA_ClearITPendingBit(DMA2_IT_GL1|DMA2_IT_GL2);
@@ -100,12 +100,12 @@ void W25X_ReceiveBuffer(void* buffer,uint32_t length){
 	dummy=0xFF;
 
 	// SPI接收通道(DMA2_Channel1)
-	W25X_DMA_Channel_Rx->CNDTR  = (uint32_t)length;				// 拷贝数量			length
+	W25X_DMA_Channel_Rx->CNDTR  = (uint16_t)length;				// 拷贝数量			length
 	W25X_DMA_Channel_Rx->CCR   |= DMA_MemoryInc_Enable;			// 内存增长模式		增长
 	W25X_DMA_Channel_Rx->CMAR   = (uint32_t)buffer;				// 内存地址			buffer
 
 	// SPI发送通道(DMA2_Channel2)
-	W25X_DMA_Channel_Tx->CNDTR  = (uint32_t)length;				// 拷贝数量			length
+	W25X_DMA_Channel_Tx->CNDTR  = (uint16_t)length;				// 拷贝数量			length
 	W25X_DMA_Channel_Tx->CCR   &= ~DMA_MemoryInc_Enable;		// 内存增长模式		不增长
 	W25X_DMA_Channel_Tx->CMAR   = (uint32_t)&dummy;				// 内存地址			buffer
 
@@ -118,7 +118,7 @@ void W25X_ReceiveBuffer(void* buffer,uint32_t length){
 	DMA_Cmd(W25X_DMA_Channel_Rx,DISABLE);
 	DMA_Cmd(W25X_DMA_Channel_Tx,DISABLE);
 }
-void W25X_SendBuffer(const void* buffer,uint32_t length) {
+void W25X_SendBuffer(const void* buffer,uint16_t length) {
     uint8_t dummy = 0xFF;
 	// 清除中断
 	DMA_ClearITPendingBit(DMA2_IT_GL1|DMA2_IT_GL2);
@@ -128,12 +128,12 @@ void W25X_SendBuffer(const void* buffer,uint32_t length) {
 	SPI3->DR;
 
 	// SPI接收通道(DMA2_Channel1)
-	W25X_DMA_Channel_Rx->CNDTR  = length;					// 拷贝数量			length
+	W25X_DMA_Channel_Rx->CNDTR  = (uint16_t)length;			// 拷贝数量			length
 	W25X_DMA_Channel_Rx->CCR   &= ~DMA_MemoryInc_Enable;	// 内存增长模式		不增长
 	W25X_DMA_Channel_Rx->CMAR   = (uint32_t)&dummy;			// 内存地址			dummy
 
 	// SPI发送通道(DMA2_Channel2)
-	W25X_DMA_Channel_Tx->CNDTR  = length;					// 拷贝数量			length
+	W25X_DMA_Channel_Tx->CNDTR  = (uint16_t)length;			// 拷贝数量			length
 	W25X_DMA_Channel_Tx->CCR   |= DMA_MemoryInc_Enable;		// 内存增长模式		增长
 	W25X_DMA_Channel_Tx->CMAR   = (uint32_t)buffer;			// 内存地址			buffer
 
@@ -141,7 +141,9 @@ void W25X_SendBuffer(const void* buffer,uint32_t length) {
 	DMA_Cmd(W25X_DMA_Channel_Rx,ENABLE);
 	DMA_Cmd(W25X_DMA_Channel_Tx,ENABLE);
 
-	while(DMA_GetFlagStatus(DMA2_FLAG_TC2)==RESET);
+	while(DMA_GetFlagStatus(DMA2_FLAG_TC2)==RESET){
+
+	}
 	// 关掉DMA
 	DMA_Cmd(W25X_DMA_Channel_Rx,DISABLE);
 	DMA_Cmd(W25X_DMA_Channel_Tx,DISABLE);

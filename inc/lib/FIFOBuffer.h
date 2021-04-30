@@ -17,6 +17,7 @@ typedef struct {
 
 void FIFO_Inititalize(FIFO_t* pFifo,uint8_t* pBuffer,uint16_t uiSize);
 uint16_t FIFO_Read(FIFO_t* pFifo,uint8_t* pBuffer,uint16_t length);
+uint8_t FIFO_ReadByte(FIFO_t* pRxFIFO);
 void FIFO_Clear(FIFO_t* pFifo);
 void FIFO_TakeMutex(FIFO_t* pFifo);
 void FIFO_GiveMutex(FIFO_t* pFifo);

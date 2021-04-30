@@ -442,6 +442,7 @@
 		<Unit filename="..\simplegui\GUI\inc\SGUI_ScrollBar.h" />
 		<Unit filename="..\simplegui\GUI\inc\SGUI_Text.h" />
 		<Unit filename="..\simplegui\GUI\inc\SGUI_Typedef.h" />
+		<Unit filename="..\simplegui\GUI\inc\SGUI_Utility.h" />
 		<Unit filename="..\simplegui\GUI\inc\SGUI_VariableBox.h" />
 		<Unit filename="..\simplegui\GUI\src\SGUI_Basic.c">
 			<Option compilerVar="CC" />
