@@ -12,7 +12,9 @@ enum ScreenId {
     SCREEN_Menu_ID,
     SCREEN_Clock_Show_ID,
     SCREEN_Clock_Edit_ID,
-    SCREEN_Calculator_ID
+    SCREEN_Calculator_ID,
+    SCREEN_FlashRom_Init_ID,
+    SCREEN_FlashRom_Prog_ID
 };
 
 enum EventId {
@@ -20,7 +22,10 @@ enum EventId {
     KEY_EVENT_ID,
     KEYBOARD_STATE_EVENT_ID,
     RTC_EVENT_ID,
-    KEY_REPEAT_EVENT_ID
+    KEY_REPEAT_EVENT_ID,
+    FLASHROM_LOCK_EVENT_ID,
+    FLASHROM_PBAR_SETUP_EVENT_ID,
+    FLASHROM_PBAR_UPDATE_EVENT_ID
 };
 
 // Events

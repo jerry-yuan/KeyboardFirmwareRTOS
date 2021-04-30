@@ -42,10 +42,11 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     SGUI_RECT menuRect;
     SGUI_ITEMS_ITEM* menuItems=NULL;
 	SGUI_MENU_PALETTE_INIT_PARAM menuPalette;
-    menuItems  = pvPortMalloc(sizeof(SGUI_ITEMS_ITEM)*2);
-    memset(menuItems,0,sizeof(SGUI_ITEMS_ITEM)*2);
+    menuItems  = pvPortMalloc(sizeof(SGUI_ITEMS_ITEM)*3);
+    memset(menuItems,0,sizeof(SGUI_ITEMS_ITEM)*3);
     menuItems[0].cszLabelText = FA_CLOCK " 时钟";
     menuItems[1].cszLabelText = FA_CALCULATOR " 计算器";
+    menuItems[2].cszLabelText = FA_MICROCHIP " FlashRom";
 
     menuObject = pvPortMalloc(sizeof(SGUI_MENU));
     memset(menuObject,0,sizeof(SGUI_MENU));
@@ -65,7 +66,7 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
 	menuPalette.stItemBase.eFocusColor = 0x05;
 	menuPalette.stItemBase.eFocusTextColor = 0x0F;
 
-    SGUI_Menu_Initialize(menuObject,&menuRect,&menuPalette,SGUI_FONT_REF(Deng12),menuItems,2);
+    SGUI_Menu_Initialize(menuObject,&menuRect,&menuPalette,SGUI_FONT_REF(Deng12),menuItems,3);
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
@@ -127,6 +128,8 @@ static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESU
             HMI_SwitchScreen(SCREEN_Clock_Show_ID,NULL);
         }else if(SGUI_Menu_GetSelection(menuObject)->iIndex == 1){
 			HMI_SwitchScreen(SCREEN_Calculator_ID,NULL);
+        }else if(SGUI_Menu_GetSelection(menuObject)->iIndex == 2){
+			HMI_SwitchScreen(SCREEN_FlashRom_Init_ID,NULL);
         }
     }
 

@@ -1,0 +1,13 @@
+#ifndef SCREEN_FLASHROM_INITSCR_H
+#define SCREEN_FLASHROM_INITSCR_H
+
+#include <HMI_Engine.h>
+
+enum{
+	FLASHROM_SWITCH_SOURCE_MENU = 0,
+	FLASHROM_SWITCH_SOURCE_PROG = 1
+};
+
+extern HMI_SCREEN_OBJECT SCREEN_FlashRom_Init;
+
+#endif
