@@ -13,6 +13,8 @@
 
 #include <screen/calculator/calculator.h>
 
+#include <screen/totp-authenticator/show.h>
+
 void hmiEngineInitialize();
 
 extern HMI_ENGINE_OBJECT* hmiEngine;

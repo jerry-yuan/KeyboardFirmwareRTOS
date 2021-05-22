@@ -5,7 +5,13 @@ file
 fill
 0x010000
 file
-Deng12.bin
+./../FontCvtST/Deng12.bin
+fill
+0x219000
 file
 LCD.bin
+fill
+0x21B000
+file
+./../GARecordMaker/GA-Keys.bin
 exit

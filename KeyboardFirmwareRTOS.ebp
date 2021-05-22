@@ -142,6 +142,9 @@
 		<Unit filename="inc\bsp\w25x.h" />
 		<Unit filename="inc\delay.h" />
 		<Unit filename="inc\FreeRTOSConfig.h" />
+		<Unit filename="inc\lib\crypto\base32.h" />
+		<Unit filename="inc\lib\crypto\hmac.h" />
+		<Unit filename="inc\lib\crypto\sha1.h" />
 		<Unit filename="inc\lib\FIFOBuffer.h" />
 		<Unit filename="inc\lib\GUIToolLib.h" />
 		<Unit filename="inc\lib\keyboard.h" />
@@ -156,6 +159,7 @@
 		<Unit filename="inc\screen\initscr.h" />
 		<Unit filename="inc\screen\keyboardscr.h" />
 		<Unit filename="inc\screen\menuscr.h" />
+		<Unit filename="inc\screen\totp-authenticator\show.h" />
 		<Unit filename="inc\screen\usbscr.h" />
 		<Unit filename="inc\stm32f10x.h" />
 		<Unit filename="inc\stm32f10x_conf.h" />
@@ -297,6 +301,15 @@
 		<Unit filename="src\delay.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src\lib\crypto\base32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\lib\crypto\hmac.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\lib\crypto\sha1.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src\lib\FIFOBuffer.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -334,6 +347,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\screen\menuscr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\screen\totp-authenticator\show.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\screen\usbscr.c">
