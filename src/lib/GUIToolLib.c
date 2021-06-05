@@ -1,6 +1,6 @@
-#include<stdio.h>
-#include<GUIToolLib.h>
-#include<bsp/w25x.h>
+#include <stdio.h>
+#include <lib/GUIToolLib.h>
+#include <bsp/w25x.h>
 #include <FreeRTOS.h>
 
 void dumpMemory(const uint8_t* src,uint32_t length){
@@ -36,33 +36,37 @@ static void setPixel(uint8_t* dst,int x,int y,int xSize,uint8_t value){
         *(dst+bytesPerLine*y+x/2) |= (value& 0x0F);
     }
 }
-void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,const uint32_t uiFontOffset){
+void GUITool_ReadBitmap(struct lfs_file* pstFontFile,SGUI_BMP_RES* pstBitmap,uint16_t uiCode){
 	GUI_FONT_HEADER stHeader;
 	GUI_FONT_SECTION stSection;
 	GUI_FONT_CHARINFO stCharInfo;
 	uint8_t* puiCharData;
 	SGUI_COLOR eColor;
 	// 读取字体头
-	W25X_Read_Data(uiFontOffset,&stHeader,sizeof(stHeader));
+	lfs_file_seek(pstW25Xfs,pstFontFile,0,LFS_SEEK_SET);
+	lfs_file_read(pstW25Xfs,pstFontFile,&stHeader,sizeof(stHeader));
 	// 读取searchTree根节点
-	W25X_Read_Data(uiFontOffset+stHeader.pSearchTreeArea,&stSection,sizeof(stSection));
+	lfs_file_seek(pstW25Xfs,pstFontFile,stHeader.pSearchTreeArea,LFS_SEEK_SET);
+	lfs_file_read(pstW25Xfs,pstFontFile,&stSection,sizeof(stSection));
 	// 查找这个字所在段
 	while(stSection.pLeftChild!=0 ||stSection.pRightChild!=0){
 		if(stSection.uiFirst>uiCode || stSection.uiLast<uiCode){
 			break;
 		}
 		if(stSection.uiMiddle<uiCode){
-			W25X_Read_Data(uiFontOffset+stSection.pRightChild,&stSection,sizeof(stSection));
+			lfs_file_seek(pstW25Xfs,pstFontFile,stSection.pRightChild,LFS_SEEK_SET);
 		}else{
-			W25X_Read_Data(uiFontOffset+stSection.pLeftChild,&stSection,sizeof(stSection));
+			lfs_file_seek(pstW25Xfs,pstFontFile,stSection.pLeftChild,LFS_SEEK_SET);
 		}
+		lfs_file_read(pstW25Xfs,pstFontFile,&stSection,sizeof(stSection));
 	}
 	if(stSection.uiFirst>uiCode || stSection.uiLast<uiCode){
 		printf("%04X cannot found in the font base.\r\n",uiCode);
 		return;
 	}
 	// 查找这个字的属性
-	W25X_Read_Data(uiFontOffset+stSection.pCharInfoAddr+sizeof(GUI_FONT_CHARINFO)*(uiCode-stSection.uiFirst),&stCharInfo,sizeof(stSection));
+	lfs_file_seek(pstW25Xfs,pstFontFile,stSection.pCharInfoAddr+sizeof(GUI_FONT_CHARINFO)*(uiCode-stSection.uiFirst),LFS_SEEK_SET);
+	lfs_file_read(pstW25Xfs,pstFontFile,&stCharInfo,sizeof(stSection));
 
 	pstBitmap->fnGetPixel = SGUI_BMP_SCAN_MODE_DHPH;
 	pstBitmap->uiDepthBits = stHeader.uiDepthBits;
@@ -73,7 +77,8 @@ void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,const uint32_t u
 		// 读取数据
 		SGUI_SystemIF_MemorySet((uint8_t*)pstBitmap->pData,0,(pstBitmap->iWidth+1)/2*pstBitmap->iHeight);
 		puiCharData = pvPortMalloc(sizeof(uint8_t)*(stCharInfo.uiXSize+1)/2*stCharInfo.uiYSize);
-		W25X_Read_Data(uiFontOffset+(stCharInfo.uiOffsetAddr & 0x00FFFFFF),puiCharData,(stCharInfo.uiXSize+1)/2*stCharInfo.uiYSize);
+		lfs_file_seek(pstW25Xfs,pstFontFile,(stCharInfo.uiOffsetAddr & 0x00FFFFFF),LFS_SEEK_SET);
+		lfs_file_read(pstW25Xfs,pstFontFile,puiCharData,(stCharInfo.uiXSize+1)/2*stCharInfo.uiYSize);
 		for(uint8_t x=0;x<stCharInfo.uiXSize;x++){
 			for(uint8_t y=0;y<stCharInfo.uiYSize;y++){
 				eColor = getPixel(puiCharData,x,y,stCharInfo.uiXSize);

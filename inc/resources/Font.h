@@ -6,4 +6,6 @@
 SGUI_FONT_RESOURCE_DECLARE(Deng12);
 SGUI_FONT_RESOURCE_DECLARE(LCD44);
 
+void Font_Initialize();
+
 #endif /* FONT_H_INCLUDED */

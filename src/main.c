@@ -15,7 +15,9 @@ static TaskHandle_t hBootstrap;
 
 static void bootstrap(void) {
     //taskENTER_CRITICAL();
-
+	printf("[%s@%d]heap=%ld\n",__FILE__,__LINE__,xPortGetFreeHeapSize());
+	RES_Initialize();
+	printf("[%s@%d]heap=%ld\n",__FILE__,__LINE__,xPortGetFreeHeapSize());
 	guiTaskInitialize();
     USBDeviceStateTaskInitialize();
     BgLightTaskTaskInitialize();

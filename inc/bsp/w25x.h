@@ -47,11 +47,11 @@ void W25X_Read_Status(W25XStatus_t* puiStatus);
 void W25X_Write_Status(W25XStatus_t puiStatus);
 void W25X_Read_Data(uint32_t uiAddress,void* pBuffer,uint32_t length);
 void W25X_Read_Data_Fast(uint32_t uiAddress,void* pBuffer,uint32_t length);
-void W25X_Write_Page(uint32_t uiAddress,void* pBuffer,uint32_t length);
+void W25X_Write_Page(uint32_t uiAddress,const void* pBuffer,uint32_t length);
+void W25X_Write_Buffer(uint32_t uiAddress,const void* pBuffer,uint32_t length);
 void W25X_Erase_Block(uint32_t uiAddress);
 void W25X_Erase_Sector(uint32_t uiAddress);
 void W25X_Erase_Chip();
 void W25X_Read_JEDECId(W25XJEDECId_t* pstJEDECId);
-
 
 #endif /* W25X_H_INCLUDED */

@@ -146,8 +146,10 @@
 		<Unit filename="inc\lib\GUIToolLib.h" />
 		<Unit filename="inc\lib\keyboard.h" />
 		<Unit filename="inc\lib\utils.h" />
-		<Unit filename="inc\resources\Font.h" />
+		<Unit filename="inc\resources\font.h" />
 		<Unit filename="inc\resources\fontawesome.h" />
+		<Unit filename="inc\resources\fs.h" />
+		<Unit filename="inc\resources\resources.h" />
 		<Unit filename="inc\screen\calculator\calculator.h" />
 		<Unit filename="inc\screen\clock\edit.h" />
 		<Unit filename="inc\screen\clock\show.h" />
@@ -175,6 +177,14 @@
 		<Unit filename="inc\USB\usb_istr.h" />
 		<Unit filename="inc\USB\usb_prop.h" />
 		<Unit filename="inc\USB\usb_pwr.h" />
+		<Unit filename="LittleFS\inc\lfs.h" />
+		<Unit filename="LittleFS\inc\lfs_util.h" />
+		<Unit filename="LittleFS\src\lfs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="LittleFS\src\lfs_util.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="SPL\inc\misc.h" />
 		<Unit filename="SPL\inc\stm32f10x_adc.h" />
 		<Unit filename="SPL\inc\stm32f10x_bkp.h" />
@@ -312,7 +322,13 @@
 		<Unit filename="src\main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src\resource\Font.c">
+		<Unit filename="src\resources\font.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\resources\fs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\resources\resources.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\screen\calculator\calculator.c">

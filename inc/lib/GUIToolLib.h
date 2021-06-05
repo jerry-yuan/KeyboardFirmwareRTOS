@@ -1,7 +1,9 @@
 #ifndef GUITOOLLIB_H_INCLUDED
 #define GUITOOLLIB_H_INCLUDED
 #include <stm32f10x.h>
+#include <lfs.h>
 #include <SGUI_Text.h>
+#include <resources/fs.h>
 typedef struct {
     uint8_t uiYSize;         // 字体高度
     uint8_t uiDepthBits;    // 深度
@@ -27,6 +29,6 @@ typedef struct {
     uint32_t uiOffsetAddr;
 } GUI_FONT_CHARINFO;
 
-void GUITool_ReadBitmap(SGUI_BMP_RES* pstBitmap,uint16_t uiCode,const uint32_t uiFontOffset);
+void GUITool_ReadBitmap(struct lfs_file* pstFontFile,SGUI_BMP_RES* pstBitmap,uint16_t uiCode);
 
 #endif /* GUITOOLLIB_H_INCLUDED */

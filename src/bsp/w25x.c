@@ -202,7 +202,7 @@ void W25X_Read_Data_Fast(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
     W25X_ReceiveBuffer(pBuffer,uiLength);
     GPIO_SetBits(GPIOA,GPIO_Pin_15);
 }
-void W25X_Write_Page(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
+void W25X_Write_Page(uint32_t uiAddress,const void* pBuffer,uint32_t uiLength) {
     const uint8_t command[]= {W25X_CMD_PAGE_PROGRAM};
     uint8_t addr[3];
     uint16_t byteToWrite = uiLength<W25X_MAX_PAGE?uiLength:W25X_MAX_PAGE;
@@ -235,6 +235,7 @@ void W25X_Erase_Block(uint32_t uiAddress) {
     W25X_SendBuffer(addr,sizeof(addr));
     GPIO_SetBits(GPIOA,GPIO_Pin_15);
 
+	W25X_Wait_Busy();
 }
 void W25X_Erase_Sector(uint32_t uiAddress) {
     const uint8_t command[]= {W25X_CMD_ERASE_SECTOR};
@@ -264,6 +265,8 @@ void W25X_Erase_Chip() {
     GPIO_ResetBits(GPIOA,GPIO_Pin_15);
     W25X_SendBuffer(command,sizeof(command));
     GPIO_SetBits(GPIOA,GPIO_Pin_15);
+
+    W25X_Wait_Busy();
 }
 void W25X_Read_JEDECId(W25XJEDECId_t* pstJEDECId) {
     const uint8_t command[]= {W25X_CMD_READ_JEDEC_ID};
@@ -282,7 +285,7 @@ void W25X_Wait_Busy() {
         W25X_Read_Status(&uiStatus);
     }
 }
-void W25X_Write_Buffer(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
+void W25X_Write_Buffer(uint32_t uiAddress,const void* pBuffer,uint32_t uiLength) {
     uint16_t uiWriteLength;
     // 先把第一个不完整页给写了
     uiWriteLength = (W25X_MAX_PAGE-(uiAddress % W25X_MAX_PAGE))%W25X_MAX_PAGE;
