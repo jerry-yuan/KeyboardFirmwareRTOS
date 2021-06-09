@@ -32,7 +32,7 @@
 #include "FreeRTOS.h"					//FreeRTOS使用
 #include "task.h"
 
-#include <task/rtc.h>
+#include <task/irqproxy.h>
 
 /** @addtogroup STM32F10x_StdPeriph_Template
   * @{
@@ -159,7 +159,7 @@ void RTC_IRQHandler(void) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     if(RTC_GetITStatus(RTC_IT_SEC) != RESET) {
         RTC_ClearITPendingBit(RTC_IT_SEC);
-        xReturn=xEventGroupSetBitsFromISR(hRTCEvent,RTC_EVENT_BIT,&xHigherPriorityTaskWoken);
+        xReturn=xEventGroupSetBitsFromISR(hIRQEventGroup,IRQ_EVENT_MASK_RTC_SECOND,&xHigherPriorityTaskWoken);
         if(xReturn == pdFAIL) {
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
