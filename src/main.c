@@ -3,11 +3,8 @@
 #include "bsp.h"
 #include <usb/usb.h>
 #include <task/priorities.h>
-#include <task/usbdevicestate.h>
 #include <task/keyscan.h>
-#include <task/keyboard.h>
 #include <task/gui.h>
-#include <task/rtc.h>
 #include <task/bglight.h>
 #include <stdlib.h>
 #include <math.h>
@@ -17,12 +14,10 @@ static void bootstrap(void) {
     //taskENTER_CRITICAL();
 
 	guiTaskInitialize();
-    USBDeviceStateTaskInitialize();
     BgLightTaskTaskInitialize();
 
     keyScanTaskInitialize();
-    keyboardTaskInitialize();
-    RTCTaskInitialize();
+    IRQProxyTaskInitialize();
 
 	USB_Initialize();
 
