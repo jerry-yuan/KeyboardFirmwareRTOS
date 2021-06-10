@@ -13,13 +13,14 @@
 #include "usb_lib.h"
 #include "usb_istr.h"
 #include <stdio.h>
-#include <task/keyboard.h>
+#include <task/irqproxy.h>
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
+extern uint32_t keyboardStatus;
 /*******************************************************************************
 * Function Name  : EP1_OUT_Callback.
 * Description    : 端点1输出处理流程(EP1 OUT Callback Routine.)
@@ -36,7 +37,7 @@ void EP1_OUT_Callback(void) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     USB_SIL_Read(EP1_OUT,(uint8_t*)&keyboardStatus);
     SetEPRxStatus(ENDP1, EP_RX_VALID);
-    xReturn=xEventGroupSetBitsFromISR(hKeyboardStateUpdateEvent,KEY_STATE_EVENT_UPDATE,&xHigherPriorityTaskWoken);
+    xReturn=xEventGroupSetBitsFromISR(hIRQEventGroup,IRQ_EVENT_MASK_KEYBOARD_UPDATE,&xHigherPriorityTaskWoken);
     if(xReturn == pdFAIL) {
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }

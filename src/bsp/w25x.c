@@ -290,9 +290,12 @@ void W25X_Write_Buffer(uint32_t uiAddress,uint8_t* pBuffer,uint32_t uiLength) {
 	uint16_t uiAddressOffset;		// (每扇区)写入数据的位置相对扇区首地址的偏移量
 	uint16_t uiWriteLength;			// (每扇区)写入的pBuffer长度
     uint16_t uiSectorWriteLength;	// (每扇区)实际需要写入的长度
-    uint16_t  uiPageWriteLength;		// (每页)需要写入的长度
+    uint16_t uiPageWriteLength;		// (每页)需要写入的长度
     uint8_t	 uiFlags;				// 擦除必要性标志
+    uint8_t* pSectorBuffer;			// 扇区缓存
 
+	// 申请空间
+	pSectorBuffer   = pvPortMalloc(W25X_SECTOR_SIZE);
     // 计算涉及写入的第一个扇区的首地址
     uiSectorAddress = uiAddress - uiAddress % W25X_SECTOR_SIZE;
     // 每次循环处理一个扇区写入
@@ -345,5 +348,5 @@ void W25X_Write_Buffer(uint32_t uiAddress,uint8_t* pBuffer,uint32_t uiLength) {
 		pBuffer 		+= uiWriteLength;
 		uiLength        -= uiWriteLength;
 	}
-	return;
+	vPortFree(pSectorBuffer);
 }

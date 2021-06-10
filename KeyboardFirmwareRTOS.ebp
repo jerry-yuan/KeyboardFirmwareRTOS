@@ -167,11 +167,9 @@
 		<Unit filename="inc\system_stm32f10x.h" />
 		<Unit filename="inc\task\bglight.h" />
 		<Unit filename="inc\task\gui.h" />
-		<Unit filename="inc\task\keyboard.h" />
+		<Unit filename="inc\task\irqproxy.h" />
 		<Unit filename="inc\task\keyscan.h" />
 		<Unit filename="inc\task\priorities.h" />
-		<Unit filename="inc\task\rtc.h" />
-		<Unit filename="inc\task\usbdevicestate.h" />
 		<Unit filename="inc\USB\hw_config.h" />
 		<Unit filename="inc\USB\usb.h" />
 		<Unit filename="inc\USB\usb_conf.h" />
@@ -370,16 +368,10 @@
 		<Unit filename="src\task\gui.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src\task\keyboard.c">
+		<Unit filename="src\task\irqproxy.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\task\keyscan.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src\task\rtc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src\task\usbdevicestate.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\USB\hw_config.c">
@@ -493,7 +485,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger>
-				<target_debugging_settings target="Release" active_interface="J-link">
+				<target_debugging_settings target="Debug" active_interface="J-link">
 					<debug_interface interface_id="J-link" ip_address="localhost" ip_port="2331" path="C:\Program Files (x86)\SEGGER\JLink_V494h" executable="JLinkGDBServer.exe" description="" dont_start_server="false" backoff_time="2000" options="2" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
 						<family_options family_id="STMicroelectronics">
 							<option opt_id="ID_DEVICE" opt_value="STM32F103RC" />
@@ -532,7 +524,7 @@
 						</family_options>
 					</debug_interface>
 				</target_debugging_settings>
-				<target_debugging_settings target="Debug" active_interface="J-link">
+				<target_debugging_settings target="Release" active_interface="J-link">
 					<debug_interface interface_id="J-link" ip_address="localhost" ip_port="2331" path="C:\Program Files (x86)\SEGGER\JLink_V494h" executable="JLinkGDBServer.exe" description="" dont_start_server="false" backoff_time="2000" options="2" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
 						<family_options family_id="STMicroelectronics">
 							<option opt_id="ID_DEVICE" opt_value="STM32F103RC" />
