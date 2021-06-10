@@ -64,10 +64,10 @@ typedef struct {
     uint32_t uiSecretLength;
     char pcSecretDecoded[80];
     TOTP_Marquee stAccountMarquee;
-} TOTP_Context;
+} ScreenContext_t;
 
 
-static TOTP_Context* pstContext=NULL;
+static ScreenContext_t* pstContext=NULL;
 
 static void loadRecord() {
     TOTP_Record* pstCurrent=&pstContext->stCurrent;
@@ -90,12 +90,12 @@ static void calcCode() {
 	HMAC(SHA1,(uint8_t*)pstContext->pcSecretDecoded,pstContext->uiSecretLength,(uint8_t*)&stTimestamp,sizeof(stTimestamp),(uint8_t*)digest);
 	// 根据Hash构建dbc
 	uint8_t offset = digest[19] & 0x0f;
-	uint32_t dbc = (digest[offset] & 0x7f) << 24 |
+	uint32_t dbc = (digest[offset + 0] & 0x7f) << 24 |
 				   (digest[offset + 1] & 0xff) << 16 |
                    (digest[offset + 2] & 0xff) << 8  |
                    (digest[offset + 3] & 0xff);
 	// 截取前6位为验证码
-	sprintf(pstContext->pcActiveCode,"%06d",dbc%1000000);
+	sprintf(pstContext->pcActiveCode,"%06d",(int)(dbc%1000000));
 	pstContext->uiCodeExpired = (RTC_GetCounter()/30+1)*30;
 }
 
@@ -109,8 +109,8 @@ HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) 
 
     // 初始化Context
     if(pstContext == NULL) {
-        pstContext = pvPortMalloc(sizeof(TOTP_Context));
-        memset(pstContext,0,sizeof(TOTP_Context));
+        pstContext = pvPortMalloc(sizeof(ScreenContext_t));
+        memset(pstContext,0,sizeof(ScreenContext_t));
         // 读取Headers
         W25X_Read_Data(FLASH_ADDR_GA_STORAGE,&pstContext->stHeader,sizeof(TOTP_Header));
         if(pstContext->stHeader.uiTotalCount>0) {
@@ -122,7 +122,6 @@ HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) 
     SGUI_Basic_ClearScreen(pstDeviceIF);
     // 绘制标题
     SGUI_Text_GetTextExtent(pcText,SGUI_FONT_REF(Deng12),&stArea);
-    printf("Title(%dx%d)\n",stArea.iWidth,stArea.iHeight);
     stRect.iX     = 1;
     stRect.iY     = 1;
     stRect.iWidth = 91;
@@ -179,19 +178,20 @@ HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) 
 	// 绘制激活码
 	if(pstContext->uiCodeExpired < RTC_GetCounter()){
 		calcCode();
+		SGUI_Basic_DrawRectangle(pstDeviceIF,130,18,126,44,0x00,0x00);
 		stRect.iY = 18;
 		stRect.iHeight = 44;
 		stRect.iWidth  = 20;
 		pcBuffer[1] = 0;
 		for(uint8_t i=0;i<6;i++){
 			pcBuffer[0] = pstContext->pcActiveCode[i];
-			stRect.iX = 130 + i*21;
-			SGUI_Basic_DrawRectangle(pstDeviceIF,stRect.iX,stRect.iY,stRect.iWidth,stRect.iHeight,0x00,0x00);
+			SGUI_Text_GetTextExtent(pcBuffer,SGUI_FONT_REF(LCD44),&stArea);
+			stRect.iX = 151 + i*21 - stArea.iWidth;
 			SGUI_Text_DrawText(pstDeviceIF,pcBuffer,SGUI_FONT_REF(LCD44),&stRect,&stPoint,0x0A);
 		}
 	}
 	// 绘制倒计时
-	sprintf(pcBuffer,"%dS",pstContext->uiCodeExpired-RTC_GetCounter());
+	sprintf(pcBuffer,"%02ds",(int)(pstContext->uiCodeExpired-RTC_GetCounter()));
 	stRect.iX = 1;
 	stRect.iY = 55;
 	stRect.iWidth = 24;
@@ -203,6 +203,7 @@ HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) 
 HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
     KEY_EVENT* pstKeyEvent;
     MappedKeyCodes_t stRelease;
+    KeyboardUsageCode_t uiKeyCode;
     *piActionID = NoAction;
     if(pstEvent->iID == RTC_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,RTC_EVENT)) {
         *piActionID = RefreshScreen;
@@ -222,8 +223,16 @@ HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* p
         } else if(containsKey(&stRelease,KeyRight)) {
             pstContext->uiCurrentId=(pstContext->uiCurrentId+1)%pstContext->stHeader.uiTotalCount;
             *piActionID = ReloadRecord;
+        } else if(containsKey(&stRelease,KeyInsert)) {
+        	uint8_t* pKeys = pvPortMalloc(6);
+        	for(uint8_t i=0;i<6;i++){
+				pKeys[i] = (pstContext->pcActiveCode[i]-'0'+9)%10+Key1;
+        	}
+        	sendKeysToHost(pKeys,6);
+        	vPortFree(pKeys);
+        } else if(containsKeys(&stRelease,&uiKeyCode,3,KeyDelete,KeyEnter,KeyDeleteForward)){
+        	sendKeysToHost(&uiKeyCode,1);
         }
-
         vPortFree(stRelease.keyCodes);
     }
     return HMI_RET_NORMAL;
