@@ -9,7 +9,7 @@
 void W25X_Wait_Busy();
 
 void W25X_Initialize() {
-    
+
     // 使能GPIO引脚时钟
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
     GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable , ENABLE); //禁止JTAG功能（保留SWD下载口）
@@ -294,6 +294,8 @@ void W25X_Write_Buffer(uint32_t uiAddress,uint8_t* pBuffer,uint32_t uiLength) {
     uint8_t	 uiFlags;				// 擦除必要性标志
     uint8_t* pSectorBuffer;			// 扇区缓存
 
+	// 申请空间
+	pSectorBuffer   = pvPortMalloc(W25X_SECTOR_SIZE);
     // 计算涉及写入的第一个扇区的首地址
     uiSectorAddress = uiAddress - uiAddress % W25X_SECTOR_SIZE;
     // 每次循环处理一个扇区写入
