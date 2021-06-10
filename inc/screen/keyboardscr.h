@@ -11,14 +11,6 @@
 #define KEYBOARD_STATE_CAPSLOCK_MASK    0x02
 #define KEYBOARD_STATE_SCROLLLOCK_MASK  0x04
 
-typedef struct {
-    uint8_t controlKeys;
-    uint8_t reserved;
-    uint8_t keys[6];
-} StandardKeyboardReport_t;
-
-typedef uint8_t ConsumerKeyboardReport_t;
-
 typedef enum{
     StandardKeyboardWorking=0x00,
     ConsumerKeyboardStandby,
