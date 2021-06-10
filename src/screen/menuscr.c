@@ -7,7 +7,6 @@
 #include <resources/Font.h>
 #include <resources/fontawesome.h>
 
-#include <task/keyboard.h>
 #include <bsp/tim.h>
 #include <lib/keyboard.h>
 
@@ -106,6 +105,10 @@ static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_
         } else if(containsKey(&stRelease,KeyEnter)) {
             *piActionID = Enter;
         }
+
+        vPortFree(stPressed.keyCodes);
+        vPortFree(stRelease.keyCodes);
+
         if(iLastAction & 0x40) {
             TIM_KeyRepeater_Set();
         }

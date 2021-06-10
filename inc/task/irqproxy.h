@@ -1,0 +1,20 @@
+#ifndef IRQPROXY_H_INCLUDED
+#define IRQPROXY_H_INCLUDED
+
+#include <FreeRTOS.h>
+#include <event_groups.h>
+
+#define IRQ_EVENT_MASK_RTC_SECOND			0x00000001
+#define IRQ_EVENT_MASK_USB_STATE_UPDATE		0x00000002
+#define IRQ_EVENT_MASK_KEYBOARD_UPDATE		0x00000004
+
+#define IRQ_EVENT_MASK_ALL (IRQ_EVENT_MASK_RTC_SECOND|			\
+							IRQ_EVENT_MASK_USB_STATE_UPDATE|	\
+							IRQ_EVENT_MASK_KEYBOARD_UPDATE)
+
+
+extern EventGroupHandle_t hIRQEventGroup;
+
+void IRQProxyTaskInitialize();
+
+#endif /* IRQPROXY_H_INCLUDED */

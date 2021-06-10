@@ -1,5 +1,9 @@
 #include <lib/keyboard.h>
+#include <string.h>
 #include <stdarg.h>
+#include <delay.h>
+#include <usb/hw_config.h>
+#include <usb_lib.h>
 
 
 const uint32_t keyboardMap[6][21]= {
@@ -17,6 +21,8 @@ const uint32_t keyboardMap[6][21]= {
     //None-LCtl  None-LWin  None-LAlt  None-None  None-None  None-Spac  None-None  None-None  None-None  None-LAlt  Fn         None-Cont  None-RCtl  None-None  None-Left  None-Down  None-Rigt  None-Num0  None-None  None-.Del  None-NEnt
     {0x00000101,0x00000108,0x00000104,0x00000000,0x00000000,0x0000002C,0x00000000,0x00000000,0x00000000,0x00000140,0x80000000,0x00000065,0x00020110,0x00000000,0x00020050,0x00200051,0x0001004F,0x00000062,0x00000000,0x00000063,0x00000058}
 };
+
+extern StandardKeyboardReport_t* standardKeyboardReport;
 
 void mapKeyCodes(KeyUpdateInfo_t* pCurrent,uint32_t* pKeyCode) {
     uint32_t* pFirstKeyCode=pKeyCode;
@@ -56,4 +62,22 @@ bool containsKeys(MappedKeyCodes_t* mappedKeyCodes,KeyboardUsageCode_t* pKeyCode
     }
     va_end(nextCode);
     return *pKeyCodeFound!=0;
+}
+
+void sendKeysToHost(uint8_t* pKeys,uint8_t uiLength){
+	StandardKeyboardReport_t backupReport=*standardKeyboardReport;
+	memset(standardKeyboardReport,0,sizeof(StandardKeyboardReport_t));
+	JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
+	Delay_ms(10);
+	for(uint8_t i=0;i<uiLength;i++){
+		standardKeyboardReport->keys[0] = pKeys[i];
+		JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
+		Delay_ms(10);
+		standardKeyboardReport->keys[0] = 0;
+		JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
+		Delay_ms(10);
+	}
+	*standardKeyboardReport=backupReport;
+	JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
+	Delay_ms(10);
 }

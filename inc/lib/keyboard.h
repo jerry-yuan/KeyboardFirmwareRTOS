@@ -61,8 +61,16 @@ typedef struct {
     uint32_t* keyCodes;
 } MappedKeyCodes_t;
 
+typedef struct {
+    uint8_t controlKeys;
+    uint8_t reserved;
+    uint8_t keys[6];
+} StandardKeyboardReport_t;
+
+typedef uint8_t ConsumerKeyboardReport_t;
+
 void mapKeyCodes(KeyUpdateInfo_t* pCurrent,uint32_t* pKeyCode);
 bool containsKey(MappedKeyCodes_t* mappedKeyCodes,KeyboardUsageCode_t keyCode);
 bool containsKeys(MappedKeyCodes_t* mappedKeyCodes,KeyboardUsageCode_t* pKeyCodeFound,uint8_t checkLength,KeyboardUsageCode_t keyCode,...);
-
+void sendKeysToHost(uint8_t* pKeys,uint8_t uiLength);
 #endif /* KEYBOARD_H_INCLUDED */

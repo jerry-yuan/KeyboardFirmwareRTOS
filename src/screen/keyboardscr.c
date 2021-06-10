@@ -8,8 +8,6 @@
 #include <bsp/tim.h>
 #include <bsp/flashMap.h>
 
-#include <task/keyboard.h>
-
 #include <usb/hw_config.h>
 #include <usb_lib.h>
 
@@ -44,10 +42,12 @@ static HMI_SCREEN_ACTION screenActions = {
 
 HMI_SCREEN_OBJECT SCREEN_Keyboard = {SCREEN_Keyboard_State_ID,&screenActions};
 
+__IO uint32_t keyboardStatus=0x00;
+
 static KeyboardStateMachine_t* stateMachine=NULL;
 
-static StandardKeyboardReport_t*    standardKeyboardReport;
-static ConsumerKeyboardReport_t*    consumerKeyboardReport;
+StandardKeyboardReport_t*    standardKeyboardReport;
+ConsumerKeyboardReport_t*    consumerKeyboardReport;
 
 static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     standardKeyboardReport = (StandardKeyboardReport_t*)pvPortMalloc(sizeof(StandardKeyboardReport_t));

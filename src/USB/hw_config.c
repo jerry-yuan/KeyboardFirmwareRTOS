@@ -32,7 +32,7 @@
 #include "usb_desc.h"
 #include "usb_pwr.h"
 #include "usb_istr.h"
-#include <task/usbdevicestate.h>
+#include <task/irqproxy.h>
 #include <screen/usbscr.h>
 #include <stdio.h>
 /* Private function prototypes -----------------------------------------------*/
@@ -71,10 +71,11 @@ void Set_USBClock(void) {
 * Return         : None.
 *******************************************************************************/
 void Enter_LowPowerMode(void) {
-    BaseType_t       xHigherPriorityTaskWoken;
+	BaseType_t xResult;
+    BaseType_t xHigherPriorityTaskWoken;
     bDeviceState = SUSPENDED;
-    xQueueSendFromISR(hUSBDeviceStateMessageQueue,(const void*)&bDeviceState,&xHigherPriorityTaskWoken);
-    if(xHigherPriorityTaskWoken == pdPASS){
+    xResult=xEventGroupSetBitsFromISR(hIRQEventGroup,IRQ_EVENT_MASK_USB_STATE_UPDATE,&xHigherPriorityTaskWoken);
+    if(xResult == pdFAIL){
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
     //printf("usb enter low power mode\r\n");
@@ -90,7 +91,8 @@ void Enter_LowPowerMode(void) {
 * Return         : None.
 *******************************************************************************/
 void Leave_LowPowerMode(void) {
-    BaseType_t       xHigherPriorityTaskWoken;
+	BaseType_t	xResult;
+    BaseType_t  xHigherPriorityTaskWoken;
     DEVICE_INFO *pInfo=&Device_Info;
     //printf("leave low power mode\r\n");
     if (pInfo->Current_Configuration!=0) {
@@ -98,8 +100,9 @@ void Leave_LowPowerMode(void) {
     } else {
         bDeviceState = ATTACHED;
     }
-    xQueueSendFromISR(hUSBDeviceStateMessageQueue,(const void*)&bDeviceState,&xHigherPriorityTaskWoken);
-    if(xHigherPriorityTaskWoken == pdPASS){
+
+    xResult=xEventGroupSetBitsFromISR(hIRQEventGroup,IRQ_EVENT_MASK_USB_STATE_UPDATE,&xHigherPriorityTaskWoken);
+    if(xResult == pdFAIL){
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
 }
