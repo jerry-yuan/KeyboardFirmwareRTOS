@@ -1,11 +1,12 @@
 #include "FreeRTOS.h"
 #include "task.h"
-#include "bsp.h"
+#include <bsp/bsp.h>
 #include <usb/usb.h>
 #include <task/priorities.h>
 #include <task/keyscan.h>
 #include <task/gui.h>
 #include <task/bglight.h>
+#include <task/irqproxy.h>
 #include <stdlib.h>
 #include <math.h>
 static TaskHandle_t hBootstrap;

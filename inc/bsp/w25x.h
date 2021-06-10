@@ -3,7 +3,8 @@
 
 #include <stm32f10x.h>
 
-#define W25X_MAX_PAGE				0x100
+#define W25X_MAX_PAGE					0x100
+#define W25X_SECTOR_SIZE				0x1000
 
 #define W25X_CMD_WRITE_ENABLE			0x06
 #define W25X_CMD_WRITE_DISABLE			0x04

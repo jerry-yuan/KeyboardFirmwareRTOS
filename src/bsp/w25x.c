@@ -1,14 +1,15 @@
 #include <w25x.h>
 #include <stm32f10x.h>
 #include <stdio.h>
-
+#include <FreeRTOS.h>
+#include <lib/utils.h>
 #define W25X_DMA_Channel_Rx DMA2_Channel1
 #define W25X_DMA_Channel_Tx DMA2_Channel2
 
 void W25X_Wait_Busy();
 
 void W25X_Initialize() {
-
+    
     // 使能GPIO引脚时钟
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
     GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable , ENABLE); //禁止JTAG功能（保留SWD下载口）
@@ -282,26 +283,68 @@ void W25X_Wait_Busy() {
         W25X_Read_Status(&uiStatus);
     }
 }
-void W25X_Write_Buffer(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
-    uint16_t uiWriteLength;
-    // 先把第一个不完整页给写了
-    uiWriteLength = (W25X_MAX_PAGE-(uiAddress % W25X_MAX_PAGE))%W25X_MAX_PAGE;
-    uiWriteLength = uiLength < uiWriteLength ? uiLength : uiWriteLength;
-    if(uiWriteLength>0) {
-        W25X_Write_Page(uiAddress,pBuffer,uiWriteLength);
-        uiAddress += uiWriteLength;
-        pBuffer   += uiWriteLength;
-        uiLength  -= uiWriteLength;
-        W25X_Wait_Busy();
-    }
-    // 把剩余的写了
-    while(uiLength>0) {
-        uiWriteLength = uiLength<W25X_MAX_PAGE ? uiLength:W25X_MAX_PAGE;
-        W25X_Wait_Busy();
-        W25X_Write_Page(uiAddress,pBuffer,uiWriteLength);
-        uiAddress += uiWriteLength;
-        pBuffer   += uiWriteLength;
-        uiLength  -= uiWriteLength;
-    }
-    W25X_Wait_Busy();
+void W25X_Write_Buffer(uint32_t uiAddress,uint8_t* pBuffer,uint32_t uiLength) {
+	uint32_t uiSectorAddress;		// 扇区的首地址
+	uint32_t uiSectorWriteAddress;	// (每扇区)写入位置的地址
+	uint8_t* puiSectorBuffer;		// (每扇区)写入数据来源
+	uint16_t uiAddressOffset;		// (每扇区)写入数据的位置相对扇区首地址的偏移量
+	uint16_t uiWriteLength;			// (每扇区)写入的pBuffer长度
+    uint16_t uiSectorWriteLength;	// (每扇区)实际需要写入的长度
+    uint16_t uiPageWriteLength;		// (每页)需要写入的长度
+    uint8_t	 uiFlags;				// 擦除必要性标志
+    uint8_t* pSectorBuffer;			// 扇区缓存
+
+    // 计算涉及写入的第一个扇区的首地址
+    uiSectorAddress = uiAddress - uiAddress % W25X_SECTOR_SIZE;
+    // 每次循环处理一个扇区写入
+	while(uiLength>0){
+		W25X_Wait_Busy();
+		uiFlags = 0;
+		// 计算写入位置相对当前扇区起始位置的偏移
+		uiAddressOffset = uiAddress-uiSectorAddress;
+		// 当前扇区要写入的数据量 = 剩余要写的量 和 扇区剩余可写的量 中较小的一个
+		uiWriteLength = MIN(W25X_SECTOR_SIZE-uiAddressOffset,uiLength);
+		// 读出当前扇区现有的数据
+		W25X_Read_Data(uiSectorAddress,pSectorBuffer,W25X_SECTOR_SIZE);
+		//dumpMemory(SectorBuffer,W25X_SECTOR_SIZE);
+		// 检查是否需要擦除
+		for(uint16_t uiByteIndex=0;uiByteIndex<uiWriteLength;uiByteIndex++){
+			// ~原有 & 新的 = 是否有位从0变1了 ==> 需要擦除
+			uiFlags |= ((~pSectorBuffer[uiAddressOffset+uiByteIndex])&pBuffer[uiByteIndex])?1:0;
+			// 将数据覆盖到缓冲区
+			pSectorBuffer[uiAddressOffset+uiByteIndex] = pBuffer[uiByteIndex];
+		}
+		if(uiFlags){
+			// 需要擦除 => 擦除扇区,修改扇区缓冲中的数据,然后完整写回
+			// 擦除扇区
+			W25X_Erase_Sector(uiSectorAddress);
+			// 修改写入位置的信息(从头写,写一个扇区)
+			uiSectorWriteAddress = uiSectorAddress;
+			uiSectorWriteLength = W25X_SECTOR_SIZE;
+			puiSectorBuffer     = pSectorBuffer;
+		}else{
+			// 无需擦除 => 直接写入对应区域即可
+			uiSectorWriteAddress = uiAddress;
+			uiSectorWriteLength = uiWriteLength;
+			puiSectorBuffer     = pSectorBuffer+uiAddressOffset;
+		}
+		// 开始页编程
+		while(uiSectorWriteLength>0){
+			// 计算当前页最多能写入的长度
+			uiPageWriteLength = MIN(W25X_MAX_PAGE,uiSectorWriteLength);
+			// 写入一页
+			W25X_Write_Page(uiSectorWriteAddress,puiSectorBuffer,uiPageWriteLength);
+			W25X_Wait_Busy();
+			// 更新写入地址与剩余长度
+			uiSectorWriteAddress += uiPageWriteLength;
+			puiSectorBuffer      += uiPageWriteLength;
+			uiSectorWriteLength  -= uiPageWriteLength;
+		}
+		// 更新地址
+		uiSectorAddress += W25X_SECTOR_SIZE;
+		uiAddress 		+= uiWriteLength;
+		pBuffer 		+= uiWriteLength;
+		uiLength        -= uiWriteLength;
+	}
+	vPortFree(pSectorBuffer);
 }
