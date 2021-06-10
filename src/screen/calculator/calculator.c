@@ -370,12 +370,27 @@ static void numberToStr(char* pBuffer,AccurateFloatNumber_t* pstNumber) {
     uint8_t uiStrLen;
     uint8_t uiReverseStart;
     uint8_t uiPrefixLen;
-    uiStrLen=sprintf(pBuffer,"%ld",pstNumber->iValue);
-    pChar = pBuffer+uiStrLen;
-    uiPrefixLen = (*pBuffer=='-')?1:0;
+    uint64_t uiTempValue;
 
+	uiPrefixLen = 0;
+    // 转换64位数字实部为字符串
+    uiTempValue = (pstNumber->iValue<0)?(-pstNumber->iValue):pstNumber->iValue;
+    uiStrLen = 0;
+    while(uiTempValue>0){
+		pBuffer[uiStrLen]='0'+uiTempValue%10;
+		uiStrLen++;
+		uiTempValue/=10;
+    }
+    if(pstNumber->iValue<0){
+		pBuffer[uiStrLen] = '-';
+		uiStrLen ++;
+		uiPrefixLen = 1;
+    }
+	reverseStr(pBuffer,0,uiStrLen-1);
+    // 找到空闲区域的起始位置
+    pChar = pBuffer+uiStrLen;
+    // 反向小数部分
     uiReverseStart = uiStrLen-SGUI_MIN_OF(pstNumber->uiShift,uiStrLen-uiPrefixLen);
-    // 反向放在小数点后边的部分
     reverseStr(pBuffer,uiReverseStart,uiStrLen-1);
     // 补小数点前缺少的0
     if(pstNumber->uiShift > uiStrLen-uiPrefixLen) {
