@@ -112,7 +112,7 @@ static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESU
     if(iActionID==RedrawState) {
         Refresh(pstDeviceIF,NULL);
     } else if(iActionID==GoMenu) {
-        HMI_SwitchScreen(SCREEN_Menu_ID,NULL);
+        HMI_SwitchScreen(SCREEN_Menu_ID,(void*)0xFFFFFFFF);
     }
     if(iActionID & ACTION_MASK_TURNONSCR){
         OLED_SetDisplayState(true);

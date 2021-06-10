@@ -69,6 +69,11 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
+	if(pstParameters != 0xFFFFFFFF){
+		HMI_GoBack(NULL);
+		return HMI_RET_NORMAL;
+	}
+	SGUI_Menu_Selecte(menuObject,0);
     SGUI_Basic_ClearScreen(pstDeviceIF);
     SGUI_Menu_Repaint(pstDeviceIF,menuObject);
     return HMI_RET_NORMAL;
