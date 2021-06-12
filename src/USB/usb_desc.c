@@ -47,7 +47,7 @@ const uint8_t JKBD_DeviceDescriptor[JKBD_SIZ_DEVICE_DESC] = {
     0x00,                       //bDeviceClass   		USB设备类号									使用配置描述符中定义的类型(0x00)
     0x00,                       //bDeviceSubClass		USB设备子类									使用配置描述符中定义的类型(0x00)
     0x00,                       //bDeviceProtocol		设备的协议									使用接口中定义的类型(0x00)
-    0x40,                       //bMaxPacketSize		端点最大包长度								64字节(8/16/32/64)
+    MAX_PACKET_SIZE,            //bMaxPacketSize		端点最大包长度								64字节(8/16/32/64)
     0x34,0x12,                  //idVendor				供应商Id									0x1234(瞎写的,不存在;0x0483==>STMicroelectronics;查询:http://www.linux-usb.org/usb.ids)
     0x21,0x43,                  //idProduct				产品Id										0x4321(瞎写的,不存在;查询同上)
     0x01,0x01,                  //bcdDevice				BCD编码的产品版本号							1.00
@@ -62,7 +62,7 @@ const uint8_t JKBD_DeviceDescriptor[JKBD_SIZ_DEVICE_DESC] = {
 /*   所有描述符(配置,接口,端点,类别,Vendor*/
 const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     //注意双字节的项目高位在后边
-    /** 配置描述符 **/
+    /***************************** 配置描述符 *****************************/
     0x09,								// bLength				描述符长度										7字节
     USB_CONFIGURATION_DESCRIPTOR_TYPE,	// bDescriptorType		描述符类型										配置描述符
     JKBD_SIZ_CONFIG_DESC,0x00,          // wTotalLength			配置描述符总长度								配置描述符+接口描述符+端点描述符
@@ -79,7 +79,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     															D4~D0		0		保留位00
 										*/
     0x96,								// bMaxPower			最大电流										300mA(单位2mA,这里要足了供电,外设好驱动)
-    /** 接口0:标准键盘 **/
+    /***************************** 接口描述符(0):标准键盘 *****************************/
     /* 09 */
     0x09,								// bLength				描述符长度			9字节
     USB_INTERFACE_DESCRIPTOR_TYPE,		// bDescriptorType		描述符类型			接口描述符
@@ -109,7 +109,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
 																			1:输入
 															D0~D3	1		端点使用的地址 */
     0x03,								// bmAttributes		端点属性		中断传输11b(00:控制 01:同步 10:批量 11:中断)
-    0x08,0x00,							// wMaxPacketSize	最大传输包大小	8字节
+    MAX_PACKET_SIZE,0x00,				// wMaxPacketSize	最大传输包大小	8字节
     0x0A,								// bInterval			传输时间间隔为	32 ms(单位毫秒)
     /** 接口0:端点1:主机输出用于键盘状态输出(OUT) **/
     /* 34 */
@@ -117,11 +117,11 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     USB_ENDPOINT_DESCRIPTOR_TYPE,		// bDescriptorType	描述符类型		端点描述符
     0x01,								// bEndpointAddress	端点地址		1 (OUT)
     0x03,								// bmAttributes		端点属性		中断传输
-    0x08,0x00,							// wMaxPacketSize	最大传输包		8字节
+    MAX_PACKET_SIZE,0x00,				// wMaxPacketSize	最大传输包		8字节
     0x0A,								// bInterval		数据传输间隔	32ms(单位毫秒)
 
 
-    /** 接口1:扩展键盘 **/
+    /***************************** 接口描述符(1):扩展HID设备 *****************************/
     /* 41 */
     0x09,								// bLength				描述符长度			9字节
     USB_INTERFACE_DESCRIPTOR_TYPE,		// bDescriptorType		描述符类型			接口描述符
@@ -141,7 +141,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     0x01,								// bNumDescriptors		下级描述符数量		1个
     0x22,								// bDescriptorType		下级描述符类型		HID报告描述符(0x22)
     JKBD_SIZ_EXTKBD_REPORT_DESC,0x00,	// wItemLength			HID报告描述符长度	JKBD_SIZ_EXTKBD_REPORT_DESC
-    /** 接口1:端点1:主机输入用于键盘按键采集(IN) **/
+    /** 接口1:端点2:主机输入用于键盘按键采集(IN) **/
     /* 59 */
     0x07,								// bLength			描述符长度		7字节
     USB_ENDPOINT_DESCRIPTOR_TYPE,		// bDescriptorType	描述符类型		端点描述符
@@ -151,15 +151,15 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
 																							1:输入
 																			D0~D3	1		端点使用的地址*/
     0x03,								// bmAttributes		端点属性		中断传输11b(00:控制 01:同步 10:批量 11:中断)
-    0x08,0x00,							// wMaxPacketSize	最大传输包大小	8字节
+    MAX_PACKET_SIZE,0x00,				// wMaxPacketSize	最大传输包大小	8字节
     0x0A,								// bInterval			传输时间间隔为	32 ms(单位毫秒)
-    /** 接口1:端点1:主机输出用于键盘状态输出(OUT) **/
+    /** 接口1:端点2:主机输出用于键盘状态输出(OUT) **/
     /* 66 */
     0x07,								// bLength			描述符长度		7字节
     USB_ENDPOINT_DESCRIPTOR_TYPE,		// bDescriptorType	描述符类型		端点描述符
     0x02,								// bEndpointAddress	端点地址		2 (OUT)
     0x03,								// bmAttributes		端点属性		中断传输
-    0x08,0x00,							// wMaxPacketSize	端点最大传输包	8字节
+    MAX_PACKET_SIZE,0x00,				// wMaxPacketSize	端点最大传输包	8字节
     0x0A,								// bInterval		数据传输间隔	32ms(单位毫秒)
     /* 73 */
 };

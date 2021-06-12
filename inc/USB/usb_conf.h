@@ -46,6 +46,10 @@
 /*-------------------------------------------------------------*/
 #define EP_NUM     (3)
 
+/* MAX_PACKET_SIZE */
+/* defines how many bytes per package */
+#define MAX_PACKET_SIZE		(0x40)
+
 /*-------------------------------------------------------------*/
 /* --------------   Buffer Description Table  -----------------*/
 /*-------------------------------------------------------------*/
@@ -53,19 +57,26 @@
 /* buffer table base address */
 #define BTABLE_ADDRESS      (0x00)
 
+#define BUFFER_BASEADDR		(BTABLE_ADDRESS+0x08*EP_NUM)
 /* EP0  */
 /* rx/tx buffer base address */
-#define ENDP0_RXADDR        (0x18)
-#define ENDP0_TXADDR        (0x58)
+#define ENDP0_RXADDR        (BUFFER_BASEADDR+MAX_PACKET_SIZE*0)	//(0x18)
+#define ENDP0_TXADDR        (BUFFER_BASEADDR+MAX_PACKET_SIZE*1)  //(0x58)
 
 /* EP1  */
-/* tx buffer base address */
-#define ENDP1_TXADDR        (0x98)
-#define ENDP1_RXADDR	    (0xD8)
+/* rx/tx buffer base address */
+#define ENDP1_RXADDR        (BUFFER_BASEADDR+MAX_PACKET_SIZE*2)	//(0x98)
+#define ENDP1_TXADDR	    (BUFFER_BASEADDR+MAX_PACKET_SIZE*3)	//(0xD8)
 
 /* EP2 */
-#define ENDP2_TXADDR		(0x118)
-#define ENDP2_RXADDR		(0x158)
+/* rx/tx buffer base address */
+#define ENDP2_RXADDR		(BUFFER_BASEADDR+MAX_PACKET_SIZE*4)	//(0x118)
+#define ENDP2_TXADDR		(BUFFER_BASEADDR+MAX_PACKET_SIZE*5)	//(0x158)
+
+/* EP3 */
+/* rx/tx buffer base address */
+#define ENDP3_TXADDR		(BUFFER_BASEADDR+MAX_PACKET_SIZE*6)
+#define ENDP3_RXADDR		(BUFFER_BASEADDR+MAX_PACKET_SIZE*7)
 
 /*-------------------------------------------------------------*/
 /* -------------------   ISTR events  -------------------------*/
