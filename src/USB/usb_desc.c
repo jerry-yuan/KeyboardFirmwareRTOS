@@ -39,7 +39,7 @@
 /* 私有函数 --------------------------------------------------------------*/
 
 /**USB 标准设备描述符(Device Descriptor)**/
-const uint8_t JKBD_DeviceDescriptor[JKBD_SIZ_DEVICE_DESC] = {
+const uint8_t JKBD_DeviceDescriptor_Data[JKBD_SIZ_DEVICE_DESC] = {
     //注意双字节的项目高位在后边
     JKBD_SIZ_DEVICE_DESC,       //bLength				设备描述符长度								JKBD_SIZ_DEVICE_DESC(18)字节
     USB_DEVICE_DESCRIPTOR_TYPE, //bDescriptorType		描述符类型									设备描述符
@@ -60,13 +60,13 @@ const uint8_t JKBD_DeviceDescriptor[JKBD_SIZ_DEVICE_DESC] = {
 /**USB 配置描述符(Configuration Descriptor)*/
 /*   All Descriptors (Configuration, Interface, Endpoint, Class, Vendor */
 /*   所有描述符(配置,接口,端点,类别,Vendor*/
-const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
+const uint8_t JKBD_ConfigDescriptor_Data[JKBD_SIZ_CONFIG_DESC] = {
     //注意双字节的项目高位在后边
     /***************************** 配置描述符 *****************************/
     0x09,								// bLength				描述符长度										7字节
     USB_CONFIGURATION_DESCRIPTOR_TYPE,	// bDescriptorType		描述符类型										配置描述符
     JKBD_SIZ_CONFIG_DESC,0x00,          // wTotalLength			配置描述符总长度								配置描述符+接口描述符+端点描述符
-    0x02,								// bNumInterfaces		配置支持的接口数量								2个
+    0x03,								// bNumInterfaces		配置支持的接口数量								2个
     0x01,								// bConfigurationValue	主机使用SetConfiguration时定位此配置的配置号	0x01
     0x00,								// iConfiguration		描述本配置的字符串描述符序列号					0x00
     0xC0,								/* bmAttributes			配置属性										1100 0000
@@ -89,7 +89,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     0x03,								// bInterfaceClass		接口实现的USB类		HID(Human Interface Device)
     0x01,								// bInterfaceSubClass	USB子类 			1=BOOT, 0=no boot
     0x01,								// nInterfaceProtocol	接口协议			无(0=none, 1=keyboard, 2=mouse)
-    0,									// iInterface			描述该接口的字符串	第0个
+    4,									// iInterface			描述该接口的字符串	第0个
     /** 接口0:HID描述符 **/
     /* 18 */
     0x09,								// bLength				描述符长度			9字节
@@ -109,7 +109,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
 																			1:输入
 															D0~D3	1		端点使用的地址 */
     0x03,								// bmAttributes		端点属性		中断传输11b(00:控制 01:同步 10:批量 11:中断)
-    MAX_PACKET_SIZE,0x00,				// wMaxPacketSize	最大传输包大小	8字节
+    EP1_TX_MAX_PACKET,0x00,				// wMaxPacketSize	最大传输包大小	8字节
     0x0A,								// bInterval			传输时间间隔为	32 ms(单位毫秒)
     /** 接口0:端点1:主机输出用于键盘状态输出(OUT) **/
     /* 34 */
@@ -117,7 +117,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     USB_ENDPOINT_DESCRIPTOR_TYPE,		// bDescriptorType	描述符类型		端点描述符
     0x01,								// bEndpointAddress	端点地址		1 (OUT)
     0x03,								// bmAttributes		端点属性		中断传输
-    MAX_PACKET_SIZE,0x00,				// wMaxPacketSize	最大传输包		8字节
+    EP1_RX_MAX_PACKET,0x00,				// wMaxPacketSize	最大传输包		8字节
     0x0A,								// bInterval		数据传输间隔	32ms(单位毫秒)
 
 
@@ -131,7 +131,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     0x03,								// bInterfaceClass		接口实现的USB类		HID(Human Interface Device)
     0x01,								// bInterfaceSubClass	USB子类 			1=BOOT, 0=no boot
     0x01,								// nInterfaceProtocol	接口协议			键盘(0=none, 1=keyboard, 2=mouse)
-    0,									// iInterface			描述该接口的字符串	第0个
+    5,									// iInterface			描述该接口的字符串	第0个
     /** 接口1:HID描述符 **/
     /* 50 */
     0x09,								// bLength				描述符长度			9字节
@@ -151,7 +151,7 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
 																							1:输入
 																			D0~D3	1		端点使用的地址*/
     0x03,								// bmAttributes		端点属性		中断传输11b(00:控制 01:同步 10:批量 11:中断)
-    MAX_PACKET_SIZE,0x00,				// wMaxPacketSize	最大传输包大小	8字节
+    EP2_TX_MAX_PACKET,0x00,				// wMaxPacketSize	最大传输包大小	8字节
     0x0A,								// bInterval			传输时间间隔为	32 ms(单位毫秒)
     /** 接口1:端点2:主机输出用于键盘状态输出(OUT) **/
     /* 66 */
@@ -159,12 +159,42 @@ const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC] = {
     USB_ENDPOINT_DESCRIPTOR_TYPE,		// bDescriptorType	描述符类型		端点描述符
     0x02,								// bEndpointAddress	端点地址		2 (OUT)
     0x03,								// bmAttributes		端点属性		中断传输
-    MAX_PACKET_SIZE,0x00,				// wMaxPacketSize	端点最大传输包	8字节
+    EP2_RX_MAX_PACKET,0x00,				// wMaxPacketSize	端点最大传输包	8字节
     0x0A,								// bInterval		数据传输间隔	32ms(单位毫秒)
+
+
+    /***************************** 接口描述符(2):上位机通信接口 *****************************/
     /* 73 */
+    0x09,								// bLength				描述符长度			9字节
+    USB_INTERFACE_DESCRIPTOR_TYPE,		// bDescriptorType		描述符类型			接口描述符
+    0x02,								// bInterfaceNumber		接口编号			0x02
+    0x00,								// bAlternateSetting	接口可替换设置号	0x00
+    0x02,								// bNumEndpoints		使用的端点数量		2
+    0xDC,								// bInterfaceClass		接口实现的USB类		Diagnostic Device(DCH)
+    0xA0,								// bInterfaceSubClass	USB子类 			A0
+    0xE0,								// nInterfaceProtocol	接口协议			E0
+    6,									// iInterface			描述该接口的字符串	第0个
+    /** 接口2:端点3:主机输入,下位机输出(IN) **/
+    /* 82 */
+    0x07,         						// bLength			描述符长度		7字节
+    USB_ENDPOINT_DESCRIPTOR_TYPE, 		// bDescriptorType	描述符类型		端点描述符
+    0x83,         						// bEndpointAddress	端点地址		3 (IN)
+    0x02,								// bmAttributes		端点属性		Bulk
+    EP3_TX_MAX_PACKET,0x00,    			// wMaxPacketSize	端点最大传输包	64字节(40H)
+    0x00,         						// bInterval		数据传输间隔	Bulk下无效
+    /** 接口2:端点3:主机输出,下位机输入(OUT) **/
+	/* 89 */
+	0x07,         						// bLength			描述符长度		7字节
+    USB_ENDPOINT_DESCRIPTOR_TYPE, 		// bDescriptorType	描述符类型		端点描述符
+    0x03,         						// bEndpointAddress	端点地址		3 (OUT)
+    0x02,								// bmAttributes		端点属性		Bulk
+    EP3_RX_MAX_PACKET,0x00,    			// wMaxPacketSize	端点最大传输包	64字节(40H)
+    0x00,         						// bInterval		数据传输间隔	Bulk下无效
+
+	/* 96 */
 };
 /* 标准键盘 HID 报告描述符 */
-const uint8_t JKBD_StdKbdReportDescriptor[JKBD_SIZ_STDKBD_REPORT_DESC] = {
+const uint8_t JKBD_StdKbdReportDescriptor_Data[JKBD_SIZ_STDKBD_REPORT_DESC] = {
     0x05, 0x01,         // USAGE_PAGE (Generic Desktop)
     0x09, 0x06,         // USAGE (Keyboard)
     0xa1, 0x01,         // COLLECTION (Application)
@@ -201,7 +231,7 @@ const uint8_t JKBD_StdKbdReportDescriptor[JKBD_SIZ_STDKBD_REPORT_DESC] = {
     0xc0                // END_COLLECTION
 };
 /** 扩展键盘报告描述符 **/
-const uint8_t JKBD_ExtKbdReportDescriptor[JKBD_SIZ_EXTKBD_REPORT_DESC]= {
+const uint8_t JKBD_ExtKbdReportDescriptor_Data[JKBD_SIZ_EXTKBD_REPORT_DESC]= {
     0x05, 0x0c,                    // USAGE_PAGE (Consumer Devices)
     0x09, 0x01,                    // USAGE (Consumer Control)
     0xa1, 0x01,                    // COLLECTION (Application)
@@ -227,14 +257,14 @@ const uint8_t JKBD_ExtKbdReportDescriptor[JKBD_SIZ_EXTKBD_REPORT_DESC]= {
 };
 /**USB字符串描述符(可选)**/
 /* 设备语言*/
-const uint8_t JKBD_StringLangID[JKBD_SIZ_STRING_LANGID] = {
+const uint8_t JKBD_StringLangID_Data[JKBD_SIZ_STRING_LANGID] = {
     JKBD_SIZ_STRING_LANGID,
     USB_STRING_DESCRIPTOR_TYPE,
     0x09,0x04      /* LangID = 0x0409: U.S. English */
 };
 
 /* 设备制造商 */
-const uint8_t JKBD_StringVendor[JKBD_SIZ_STRING_VENDOR] = {
+const uint8_t JKBD_StringVendor_Data[JKBD_SIZ_STRING_VENDOR] = {
     JKBD_SIZ_STRING_VENDOR, /* Size of Vendor string */
     USB_STRING_DESCRIPTOR_TYPE,  /* bDescriptorType*/
     /* Manufacturer: "STMicroelectronics" */
@@ -243,17 +273,60 @@ const uint8_t JKBD_StringVendor[JKBD_SIZ_STRING_VENDOR] = {
     'c', 0, 's', 0
 };
 /* 产品名称 */
-const uint8_t JKBD_StringProduct[JKBD_SIZ_STRING_PRODUCT] = {
+const uint8_t JKBD_StringProduct_Data[JKBD_SIZ_STRING_PRODUCT] = {
     JKBD_SIZ_STRING_PRODUCT,          /* bLength */
     USB_STRING_DESCRIPTOR_TYPE,        /* bDescriptorType */
-    'S',0,'T',0,'M',0
+	0x00,0x4E,	/* "一" unicode */
+	0x2A,0x4E,	/* "个" unicode */
+	0x0D,0x4E,	/* "不" unicode */
+	0x3F,0x61,	/* "愿" unicode */
+	0x0F,0x90,	/* "透" unicode */
+	0x32,0x97,	/* "露" unicode */
+	0xD3,0x59,	/* "姓" unicode */
+	0x0D,0x54,	/* "名" unicode */
+	0x84,0x76,	/* "的" unicode */
+	0x2E,0x95,	/* "键" unicode */
+	0xD8,0x76,	/* "盘" unicode */
 };
 /* 产品序列号 */
-const uint8_t JKBD_StringSerial[JKBD_SIZ_STRING_SERIAL] = {
+const uint8_t JKBD_StringSerial_Data[JKBD_SIZ_STRING_SERIAL] = {
     JKBD_SIZ_STRING_SERIAL,             /* bLength */
     USB_STRING_DESCRIPTOR_TYPE,             /* bDescriptorType */
     'S', 0, 'T', 0, 'M', 0, '3', 0, '2', 0
 };
-
+/* 标准键盘接口描述 */
+const uint8_t JKBD_StringStdKbdInterfaceDesc_Data[JKBD_SIZ_STRING_STDKBD_INTERFACE_DESC] = {
+	JKBD_SIZ_STRING_STDKBD_INTERFACE_DESC,	/* bLength */
+	USB_STRING_DESCRIPTOR_TYPE,				/* bDescriptorType */
+	0x07,0x68,	/* "标" unicode */
+	0xC6,0x51,	/* "准" unicode */
+	0x2E,0x95,	/* "键" unicode */
+	0xD8,0x76,	/* "盘" unicode */
+};
+/* 扩展HID接口描述 */
+const uint8_t JKBD_StringExtKbdInterfaceDesc_Data[JKBD_SIZ_STRING_EXTKBD_INTERFACE_DESC] = {
+	JKBD_SIZ_STRING_EXTKBD_INTERFACE_DESC,	/* bLength */
+	USB_STRING_DESCRIPTOR_TYPE,				/* bDescriptorType */
+	0x69,0x62,	/* "扩" unicode */
+	0x55,0x5C,	/* "展" unicode */
+	0xBA,0x4E,	/* "人" unicode */
+	0x53,0x4F,	/* "体" unicode */
+	0x93,0x8F,	/* "输" unicode */
+	0x65,0x51,	/* "入" unicode */
+	0x66,0x5B,	/* "学" unicode */
+	0xBE,0x8B,	/* "设" unicode */
+	0x07,0x59,	/* "备" unicode */
+};
+/* 数据通信接口描述 */
+const uint8_t JKBD_StringIOPortInterfaceDesc_Data[JKBD_SIZ_STRING_IOPORT_INTERFACE_DESC] = {
+	JKBD_SIZ_STRING_IOPORT_INTERFACE_DESC,	/* bLength */
+	USB_STRING_DESCRIPTOR_TYPE,				/* bDescriptorType */
+	0x70,0x65,	/* "数" unicode */
+	0x6E,0x63,	/* "据" unicode */
+	0x1A,0x90,	/* "通" unicode */
+	0xE1,0x4F,	/* "信" unicode */
+	0xA5,0x63,	/* "接" unicode */
+	0xE3,0x53,	/* "口" unicode */
+};
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

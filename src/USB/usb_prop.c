@@ -60,8 +60,8 @@ DEVICE_PROP Device_Property = {
     JKBD_GetDeviceDescriptor,       // 获得设备描述符
     JKBD_GetConfigDescriptor,       // 获得配置描述符
     JKBD_GetStringDescriptor,       // 获取字符串描述符
-    0,                                  // V4.0USB库不再使用,用于向前兼容
-    0x40                                // 最大包大小
+    0,                              // V4.0USB库不再使用,用于向前兼容
+    MAX_PACKET_SIZE                 // 最大包大小
 };
 // 用户标准请求
 USER_STANDARD_REQUESTS User_Standard_Requests = {
@@ -77,40 +77,44 @@ USER_STANDARD_REQUESTS User_Standard_Requests = {
 };
 // 设备描述符
 ONE_DESCRIPTOR Device_Descriptor = {
-    (uint8_t*)JKBD_DeviceDescriptor,
+    (uint8_t*)JKBD_DeviceDescriptor_Data,
     JKBD_SIZ_DEVICE_DESC
 };
 // 配置描述符
 ONE_DESCRIPTOR Config_Descriptor = {
-    (uint8_t*)JKBD_ConfigDescriptor,
+    (uint8_t*)JKBD_ConfigDescriptor_Data,
     JKBD_SIZ_CONFIG_DESC
 };
 // 标准键盘HID报告描述符
 ONE_DESCRIPTOR JKBD_Std_Kbd_Report_Descriptor = {
-    (uint8_t *)JKBD_StdKbdReportDescriptor,
+    (uint8_t *)JKBD_StdKbdReportDescriptor_Data,
     JKBD_SIZ_STDKBD_REPORT_DESC
 };
 // 扩展键盘HID报告描述符
 ONE_DESCRIPTOR JKBD_Ext_Kbd_Report_Descriptor = {
-    (uint8_t *)JKBD_ExtKbdReportDescriptor,
+    (uint8_t *)JKBD_ExtKbdReportDescriptor_Data,
     JKBD_SIZ_EXTKBD_REPORT_DESC
 };
 // 标准键盘HID描述符
 ONE_DESCRIPTOR JKBD_Std_Kbd_Hid_Descriptor = {
-    (uint8_t*)JKBD_ConfigDescriptor + JKBD_OFF_STDKBD_HID_DESC,
+    (uint8_t*)JKBD_ConfigDescriptor_Data + JKBD_OFF_STDKBD_HID_DESC,
     JKBD_SIZ_STDKBD_HID_DESC
 };
 // 扩展键盘HID描述符
 ONE_DESCRIPTOR JKBD_Ext_Kbd_Hid_Descriptor = {
-    (uint8_t*)JKBD_ConfigDescriptor + JKBD_OFF_EXTKBD_HID_DESC,
+    (uint8_t*)JKBD_ConfigDescriptor_Data + JKBD_OFF_EXTKBD_HID_DESC,
     JKBD_SIZ_EXTKBD_HID_DESC
 };
 // 字符串描述符
-ONE_DESCRIPTOR String_Descriptor[4] = {
-    {(uint8_t*)JKBD_StringLangID, JKBD_SIZ_STRING_LANGID},
-    {(uint8_t*)JKBD_StringVendor, JKBD_SIZ_STRING_VENDOR},
-    {(uint8_t*)JKBD_StringProduct, JKBD_SIZ_STRING_PRODUCT},
-    {(uint8_t*)JKBD_StringSerial, JKBD_SIZ_STRING_SERIAL}
+ONE_DESCRIPTOR String_Descriptor[7] = {
+    {(uint8_t*)JKBD_StringLangID_Data, JKBD_SIZ_STRING_LANGID},
+    {(uint8_t*)JKBD_StringVendor_Data, JKBD_SIZ_STRING_VENDOR},
+    {(uint8_t*)JKBD_StringProduct_Data, JKBD_SIZ_STRING_PRODUCT},
+    {(uint8_t*)JKBD_StringSerial_Data, JKBD_SIZ_STRING_SERIAL},
+    {(uint8_t*)JKBD_StringStdKbdInterfaceDesc_Data, JKBD_SIZ_STRING_STDKBD_INTERFACE_DESC},
+    {(uint8_t*)JKBD_StringExtKbdInterfaceDesc_Data, JKBD_SIZ_STRING_EXTKBD_INTERFACE_DESC},
+    {(uint8_t*)JKBD_StringIOPortInterfaceDesc_Data, JKBD_SIZ_STRING_IOPORT_INTERFACE_DESC},
+
 };
 
 /* Extern variables ----------------------------------------------------------*/
@@ -153,7 +157,7 @@ void JKBD_Reset(void) {
     pInformation->Current_Interface = 0;/*the default Interface*/
 
     /* Current Feature initialization */
-    pInformation->Current_Feature = JKBD_ConfigDescriptor[7];
+    pInformation->Current_Feature = JKBD_ConfigDescriptor_Data[7];
     SetBTABLE(BTABLE_ADDRESS);
     /* Initialize Endpoint 0 */
     SetEPType(ENDP0, EP_CONTROL);
@@ -188,6 +192,18 @@ void JKBD_Reset(void) {
     SetEPRxAddr(ENDP2,ENDP2_RXADDR);
     SetEPRxCount(ENDP2, 1);
     SetEPRxStatus(ENDP2,EP_RX_VALID);
+
+    /* Initialize Endpoint 3 */
+    SetEPType(ENDP3, EP_BULK);
+
+    /* Initialize Endpoint IN 3 */
+    SetEPTxAddr(ENDP3, ENDP3_TXADDR);
+    SetEPTxStatus(ENDP3, EP_TX_NAK);
+
+	/* Initialize Endpoint OUT 3 */
+	SetEPRxAddr(ENDP3, ENDP3_RXADDR);
+	SetEPRxCount(ENDP3, 64);
+	SetEPRxStatus(ENDP3, EP_RX_VALID);
 
     /* Set this device to response on default address */
     SetDeviceAddress(0);

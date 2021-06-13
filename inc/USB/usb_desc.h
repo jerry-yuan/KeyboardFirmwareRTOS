@@ -51,26 +51,34 @@
 #define JKBD_SIZ_EXTKBD_HID_DESC                0x09
 #define JKBD_OFF_EXTKBD_HID_DESC                0x28
 
-#define JKBD_SIZ_DEVICE_DESC                18
-#define JKBD_SIZ_CONFIG_DESC                73
-#define JKBD_SIZ_STDKBD_REPORT_DESC         60
-#define JKBD_SIZ_EXTKBD_REPORT_DESC			42
-#define JKBD_SIZ_STRING_LANGID              4
-#define JKBD_SIZ_STRING_VENDOR              38
-#define JKBD_SIZ_STRING_PRODUCT             8
-#define JKBD_SIZ_STRING_SERIAL              26
+#define JKBD_SIZ_DEVICE_DESC                	18
+#define JKBD_SIZ_CONFIG_DESC                	96
+#define JKBD_SIZ_STDKBD_REPORT_DESC         	60
+#define JKBD_SIZ_EXTKBD_REPORT_DESC				    42
+#define JKBD_SIZ_STRING_LANGID              	4
+#define JKBD_SIZ_STRING_VENDOR              	38
+#define JKBD_SIZ_STRING_PRODUCT             	24
+#define JKBD_SIZ_STRING_SERIAL              	26
+#define JKBD_SIZ_STRING_STDKBD_INTERFACE_DESC	10
+#define JKBD_SIZ_STRING_EXTKBD_INTERFACE_DESC	20
+#define JKBD_SIZ_STRING_IOPORT_INTERFACE_DESC	14
+
+
 
 #define STANDARD_ENDPOINT_DESC_SIZE             0x09
 
 /* Exported functions ------------------------------------------------------- */
-extern const uint8_t JKBD_DeviceDescriptor[JKBD_SIZ_DEVICE_DESC];
-extern const uint8_t JKBD_ConfigDescriptor[JKBD_SIZ_CONFIG_DESC];
-extern const uint8_t JKBD_StdKbdReportDescriptor[JKBD_SIZ_STDKBD_REPORT_DESC];
-extern const uint8_t JKBD_ExtKbdReportDescriptor[JKBD_SIZ_EXTKBD_REPORT_DESC];
-extern const uint8_t JKBD_StringLangID[JKBD_SIZ_STRING_LANGID];
-extern const uint8_t JKBD_StringVendor[JKBD_SIZ_STRING_VENDOR];
-extern const uint8_t JKBD_StringProduct[JKBD_SIZ_STRING_PRODUCT];
-extern const uint8_t JKBD_StringSerial[JKBD_SIZ_STRING_SERIAL];
+extern const uint8_t JKBD_DeviceDescriptor_Data[JKBD_SIZ_DEVICE_DESC];
+extern const uint8_t JKBD_ConfigDescriptor_Data[JKBD_SIZ_CONFIG_DESC];
+extern const uint8_t JKBD_StdKbdReportDescriptor_Data[JKBD_SIZ_STDKBD_REPORT_DESC];
+extern const uint8_t JKBD_ExtKbdReportDescriptor_Data[JKBD_SIZ_EXTKBD_REPORT_DESC];
+extern const uint8_t JKBD_StringLangID_Data[JKBD_SIZ_STRING_LANGID];
+extern const uint8_t JKBD_StringVendor_Data[JKBD_SIZ_STRING_VENDOR];
+extern const uint8_t JKBD_StringProduct_Data[JKBD_SIZ_STRING_PRODUCT];
+extern const uint8_t JKBD_StringSerial_Data[JKBD_SIZ_STRING_SERIAL];
+extern const uint8_t JKBD_StringStdKbdInterfaceDesc_Data[JKBD_SIZ_STRING_STDKBD_INTERFACE_DESC];
+extern const uint8_t JKBD_StringExtKbdInterfaceDesc_Data[JKBD_SIZ_STRING_EXTKBD_INTERFACE_DESC];
+extern const uint8_t JKBD_StringIOPortInterfaceDesc_Data[JKBD_SIZ_STRING_IOPORT_INTERFACE_DESC];
 
 #ifdef __cplusplus
 }

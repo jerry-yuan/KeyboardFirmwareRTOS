@@ -9,11 +9,13 @@
 
 
 /* Includes ------------------------------------------------------------------*/
+#include "usb.h"
 #include "hw_config.h"
 #include "usb_lib.h"
 #include "usb_istr.h"
 #include <stdio.h>
 #include <task/irqproxy.h>
+#include <lib/utils.h>
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -47,6 +49,23 @@ void EP2_IN_Callback(void) {
 }
 void EP2_OUT_Callback(void) {
     SetEPRxStatus(ENDP2, EP_RX_VALID);
+}
+void EP3_IN_Callback(void){
+
+}
+void EP3_OUT_Callback(void){
+	uint16_t receivedCount=GetEPRxCount(ENDP3);
+	uint16_t part1Length = MIN(receivedCount,pUSBFIFO->uiSize-pUSBFIFO->uiIn);
+	uint16_t part2Length = receivedCount-part1Length;
+
+	PMAToUserBufferCopy(pUSBFIFO->pBuffer+pUSBFIFO->uiIn,ENDP3_RXADDR,part1Length);
+	PMAToUserBufferCopy(pUSBFIFO->pBuffer,ENDP3_RXADDR+part1Length,part2Length);
+
+	pUSBFIFO->uiIn = (pUSBFIFO->uiIn+receivedCount)%pUSBFIFO->uiSize;
+
+	SetEPRxStatus(ENDP3, EP_RX_VALID);
+	FIFO_Notify(pUSBFIFO);
+
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
