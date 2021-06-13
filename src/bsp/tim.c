@@ -3,12 +3,10 @@
 
 #include <screen/consts.h>
 
-#include <task/gui.h>
+#include <task/irqproxy.h>
 void (*TIM_KeyRepeater_IRQHandler)()=NULL;
 void TIM_KeyRepeater_DelayTimeout();
 void TIM_KeyRepeater_RepeatTimeout();
-KEY_REPEAT_EVENT stKeyRepeatEvent;
-KEY_REPEAT_EVENT* pstKeyRepeatEvent=&stKeyRepeatEvent;
 
 SGUI_INT					iLastAction=0;
 void TIM_Initialize() {
@@ -67,9 +65,6 @@ void TIM_Initialize() {
     TIM_ClearFlag(TIM3,TIM_FLAG_Update);
     // 使能定时器中断
     TIM_ITConfig(TIM3,TIM_IT_Update,ENABLE);
-
-    stKeyRepeatEvent.Head.iID	= KEY_REPEAT_EVENT_ID;
-    stKeyRepeatEvent.Head.iSize = sizeof(stKeyRepeatEvent);
 }
 
 void TIM_ScreenSaver_Reset() {
@@ -100,7 +95,7 @@ void TIM_KeyRepeater_DelayTimeout() {
     TIM_SetCounter(TIM3,TIM_KEY_REPEATER_REPEAT_COUNTER_RESET-1);
     TIM_KeyRepeater_IRQHandler=TIM_KeyRepeater_RepeatTimeout;
     TIM_Cmd(TIM3,ENABLE);
-    xReturn=xQueueSendFromISR(hEventQueue,&pstKeyRepeatEvent,&xHigherPriorityTaskWoken);
+    xReturn=xEventGroupSetBitsFromISR(hIRQEventGroup,IRQ_EVENT_MASK_KEYREPEAT_TIMEOUT,&xHigherPriorityTaskWoken);
     if(xReturn == pdFAIL) {
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
@@ -108,7 +103,7 @@ void TIM_KeyRepeater_DelayTimeout() {
 void TIM_KeyRepeater_RepeatTimeout() {
 	BaseType_t xHigherPriorityTaskWoken=pdFALSE;
     BaseType_t xReturn=pdFAIL;
-    xReturn=xQueueSendFromISR(hEventQueue,&pstKeyRepeatEvent,&xHigherPriorityTaskWoken);
+    xReturn=xEventGroupSetBitsFromISR(hIRQEventGroup,IRQ_EVENT_MASK_KEYREPEAT_TIMEOUT,&xHigherPriorityTaskWoken);
     if(xReturn == pdFAIL) {
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }

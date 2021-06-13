@@ -56,6 +56,16 @@ void IRQProxyTask(){
 
             xQueueSend(hEventQueue,&pEvent,portMAX_DELAY);
 		}
+		// 处理KeyRepeater
+		if(uxEventBits & IRQ_EVENT_MASK_KEYREPEAT_TIMEOUT){
+			KEY_REPEAT_EVENT* pEvent = pvPortMalloc(sizeof(KEY_REPEAT_EVENT));
+
+			pEvent->Head.iID	= KEY_REPEAT_EVENT_ID;
+			pEvent->Head.iSize	= sizeof(KEY_REPEAT_EVENT);
+
+			xQueueSend(hEventQueue,&pEvent,portMAX_DELAY);
+
+		}
 
 	}
 }
