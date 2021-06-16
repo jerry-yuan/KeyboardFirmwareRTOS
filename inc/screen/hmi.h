@@ -13,6 +13,9 @@
 
 #include <screen/calculator/calculator.h>
 
+#include <screen/flashrom/initscr.h>
+#include <screen/flashrom/progscr.h>
+
 void hmiEngineInitialize();
 
 extern HMI_ENGINE_OBJECT* hmiEngine;

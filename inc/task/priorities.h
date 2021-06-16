@@ -7,4 +7,6 @@
 #define TASK_GUI_PRIORITY               2
 #define TASK_BGLIGHT_PRIORITY           4
 
+#define TASK_FLASHROM_PRIORITY			3
+
 #endif /* PRIORITIES_H_INCLUDED */

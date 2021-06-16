@@ -145,6 +145,7 @@
 		<Unit filename="inc\lib\FIFOBuffer.h" />
 		<Unit filename="inc\lib\GUIToolLib.h" />
 		<Unit filename="inc\lib\keyboard.h" />
+		<Unit filename="inc\lib\SerProg.h" />
 		<Unit filename="inc\lib\utils.h" />
 		<Unit filename="inc\resources\Font.h" />
 		<Unit filename="inc\resources\fontawesome.h" />
@@ -152,6 +153,9 @@
 		<Unit filename="inc\screen\clock\edit.h" />
 		<Unit filename="inc\screen\clock\show.h" />
 		<Unit filename="inc\screen\consts.h" />
+		<Unit filename="inc\screen\flashrom\initscr.h" />
+		<Unit filename="inc\screen\flashrom\progscr.h" />
+		<Unit filename="inc\screen\flashrom\task.h" />
 		<Unit filename="inc\screen\hmi.h" />
 		<Unit filename="inc\screen\initscr.h" />
 		<Unit filename="inc\screen\keyboardscr.h" />
@@ -320,6 +324,15 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\screen\clock\show.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\screen\flashrom\initscr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\screen\flashrom\progscr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\screen\flashrom\task.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\screen\hmi.c">
