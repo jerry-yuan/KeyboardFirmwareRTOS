@@ -14,10 +14,17 @@ typedef struct{
 	uint8_t* pBuffer;
 	uint16_t uiLength;
 } Buffer_t;
+typedef struct{
+	uint32_t uiDeviceId;
+	uint32_t uiRevisionId;
+	uint8_t  uiSerial[12];
+	uint16_t  uiFlashSize;
+} SysInfo_t;
 //typedef SGUI_DEVPF_IF_DEFINE(R, FN, PARAM)
 typedef uint8_t (*RequestHandler_t)(Buffer_t* pstRequest,Buffer_t* pstResponse);
 // 0x00
 static uint8_t syncHandler(Buffer_t* pstRequest,Buffer_t* pstResponse);
+static uint8_t sysInfo(Buffer_t* pstRequest,Buffer_t* pstResponse);
 // 0x10
 static uint8_t rtcGetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse);
 static uint8_t rtcSetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse);
@@ -26,7 +33,7 @@ static uint8_t largeEcho(Buffer_t* pstRequest,Buffer_t* pstResponse);
 
 const RequestHandler_t requestHandlers[256]={
 			 /*    0x00      0x01			 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0A 0x0B 0x0C 0x0D 0x0E 0x0F*/
-	/* 0x00 */ syncHandler	,NULL			,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+	/* 0x00 */ syncHandler	,sysInfo		,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 	/* 0x10 */ rtcGetCounter,rtcSetCounter	,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 	/* 0x20 */ largeEcho,
 	NULL
@@ -39,6 +46,22 @@ static uint8_t syncHandler(Buffer_t* pstRequest,Buffer_t* pstResponse){
 	pstResponse->pBuffer=pvPortMalloc(sizeof(syncResp));
 	memcpy(pstResponse->pBuffer,syncResp,sizeof(syncResp));
 	pstResponse->uiLength = sizeof(syncResp);
+	return R_ACK;
+}
+static uint8_t sysInfo(Buffer_t* pstRequest,Buffer_t* pstResponse){
+	SysInfo_t* pstInfo=pvPortMalloc(sizeof(SysInfo_t));
+	// 获取DevId
+	pstInfo->uiDeviceId = DBGMCU_GetDEVID();
+	// 获取RevId
+	pstInfo->uiRevisionId = DBGMCU_GetREVID();
+	// 获取96位序列号
+	memcpy(&pstInfo->uiSerial,(uint8_t*)0x1FFFF7E8,12);
+	// 获取闪存大小
+	pstInfo->uiFlashSize = *((uint16_t*)0x1FFFF7E0);
+
+	pstResponse->pBuffer = pstInfo;
+	pstResponse->uiLength = sizeof(SysInfo_t);
+
 	return R_ACK;
 }
 static uint8_t rtcGetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse){
