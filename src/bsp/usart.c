@@ -19,7 +19,7 @@ void USART_Initialize(void) {
 
     pRxFIFO  = pvPortMalloc(sizeof(FIFO_t));
 
-    FIFO_Inititalize(pRxFIFO,pvPortMalloc(1200),1200);
+    FIFO_Inititalize(pRxFIFO,pvPortMalloc(100),100);
     /**
      * 初始化USART
      */
@@ -27,7 +27,7 @@ void USART_Initialize(void) {
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
     // 初始化USART1
     USART_InitTypeDef USART_InitStructure;
-    USART_InitStructure.USART_BaudRate 				= 460800;
+    USART_InitStructure.USART_BaudRate 				= 115200;
     USART_InitStructure.USART_WordLength			= USART_WordLength_8b;
     USART_InitStructure.USART_StopBits				= USART_StopBits_1;
     USART_InitStructure.USART_Parity				= USART_Parity_No;

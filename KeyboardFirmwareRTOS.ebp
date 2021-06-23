@@ -167,6 +167,7 @@
 		<Unit filename="inc\system_stm32f10x.h" />
 		<Unit filename="inc\task\bglight.h" />
 		<Unit filename="inc\task\gui.h" />
+		<Unit filename="inc\task\iotask.h" />
 		<Unit filename="inc\task\irqproxy.h" />
 		<Unit filename="inc\task\keyscan.h" />
 		<Unit filename="inc\task\priorities.h" />
@@ -363,6 +364,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\task\gui.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\task\iotask.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\task\irqproxy.c">

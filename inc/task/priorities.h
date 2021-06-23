@@ -6,6 +6,7 @@
 #define TASK_IRQ_EVENT_PRIORITY			3
 #define TASK_GUI_PRIORITY               2
 #define TASK_BGLIGHT_PRIORITY           4
+#define TASK_IO_PRIORITY				3
 
 #define TASK_FLASHROM_PRIORITY			3
 

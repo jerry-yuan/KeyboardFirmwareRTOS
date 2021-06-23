@@ -33,7 +33,14 @@ uint16_t FIFO_Read(FIFO_t* pFifo,uint8_t* pBuffer,uint16_t length){
 	return readableLength;
 
 }
-
+void FIFO_SafeRead(FIFO_t* pFifo,uint8_t* pBuffer,uint16_t uiLength){
+	uint16_t uiRead;
+	while(uiLength>0){
+		uiRead = FIFO_Read(pFifo,pBuffer,uiLength);
+		pBuffer += uiRead;
+		uiLength -= uiRead;
+	}
+}
 uint8_t FIFO_ReadByte(FIFO_t* pFifo){
 	uint8_t byte;
 	FIFO_Read(pFifo,&byte,1);

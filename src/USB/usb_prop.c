@@ -33,6 +33,7 @@
 #include "usb_desc.h"
 #include "usb_pwr.h"
 #include "hw_config.h"
+#include <string.h>
 
 /* 私有类型声明(Private typedef) ---------------------------------------------*/
 /* 私有声明(Private define) --------------------------------------------------*/
@@ -158,6 +159,7 @@ void JKBD_Reset(void) {
 
     /* Current Feature initialization */
     pInformation->Current_Feature = JKBD_ConfigDescriptor_Data[7];
+    memset((uint8_t*)PMAAddr,0,0x3FF);
     SetBTABLE(BTABLE_ADDRESS);
     /* Initialize Endpoint 0 */
     SetEPType(ENDP0, EP_CONTROL);

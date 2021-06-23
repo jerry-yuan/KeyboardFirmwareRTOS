@@ -14,6 +14,7 @@
 #include "usb_lib.h"
 #include "usb_istr.h"
 #include <stdio.h>
+#include <string.h>
 #include <task/irqproxy.h>
 #include <lib/utils.h>
 /* Private typedef -----------------------------------------------------------*/
@@ -23,6 +24,7 @@
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 extern uint32_t keyboardStatus;
+extern SemaphoreHandle_t hEP3TxWait;
 /*******************************************************************************
 * Function Name  : EP1_OUT_Callback.
 * Description    : 端点1输出处理流程(EP1 OUT Callback Routine.)
@@ -51,15 +53,31 @@ void EP2_OUT_Callback(void) {
     SetEPRxStatus(ENDP2, EP_RX_VALID);
 }
 void EP3_IN_Callback(void){
-
+    BaseType_t xReturn = pdPASS;
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	xReturn=xSemaphoreGiveFromISR(hEP3TxWait,&xHigherPriorityTaskWoken);
+	if(xReturn==pdFAIL){
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+	}
 }
 void EP3_OUT_Callback(void){
-	uint16_t receivedCount=GetEPRxCount(ENDP3);
-	uint16_t part1Length = MIN(receivedCount,pUSBFIFO->uiSize-pUSBFIFO->uiIn);
-	uint16_t part2Length = receivedCount-part1Length;
+	uint8_t ep3RxCache[64]={0};
+	uint16_t tempDoubleBytes;
+	uint8_t receivedCount=GetEPRxCount(ENDP3);
+	uint8_t part1Length = MIN(receivedCount,pUSBFIFO->uiSize-pUSBFIFO->uiIn);
+	uint8_t part2Length = receivedCount-part1Length;
 
-	PMAToUserBufferCopy(pUSBFIFO->pBuffer+pUSBFIFO->uiIn,ENDP3_RXADDR,part1Length);
-	PMAToUserBufferCopy(pUSBFIFO->pBuffer,ENDP3_RXADDR+part1Length,part2Length);
+	uint8_t part1LengthFloor = part1Length & 0xFE;
+	uint8_t part2LengthFloor = part2Length & 0xFE;
+
+	if(part2Length!=0){
+		NOP_Process();
+	}
+
+	PMAToUserBufferCopy(ep3RxCache,GetEPRxAddr(ENDP3),receivedCount);
+
+	memcpy(pUSBFIFO->pBuffer+pUSBFIFO->uiIn,ep3RxCache,part1Length);
+	memcpy(pUSBFIFO->pBuffer,ep3RxCache+part1Length,part2Length);
 
 	pUSBFIFO->uiIn = (pUSBFIFO->uiIn+receivedCount)%pUSBFIFO->uiSize;
 
