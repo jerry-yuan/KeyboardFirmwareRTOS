@@ -2,13 +2,27 @@
 #include <stm32f10x.h>
 #include <stdio.h>
 #include <FreeRTOS.h>
+#include <semphr.h>
 #include <lib/utils.h>
 #define W25X_DMA_Channel_Rx DMA2_Channel1
 #define W25X_DMA_Channel_Tx DMA2_Channel2
 
+static SemaphoreHandle_t hMutex;
+
 void W25X_Wait_Busy();
 
+static void inline W25X_TakeAndEnable(){
+	while(xSemaphoreTake(hMutex,portMAX_DELAY)!=pdTRUE);
+	GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+}
+static void inline W25X_GiveAndDisable(){
+	GPIO_SetBits(GPIOA,GPIO_Pin_15);
+	xSemaphoreGive(hMutex);
+}
+
 void W25X_Initialize() {
+
+	hMutex = xSemaphoreCreateMutex();
 
     // 使能GPIO引脚时钟
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
@@ -153,30 +167,30 @@ void W25X_SendBuffer(const void* buffer,uint16_t length) {
 void W25X_Set_WriteState(FunctionalState writeState) {
     const uint8_t enableCmd[] = {W25X_CMD_WRITE_ENABLE};
     const uint8_t disableCmd[]= {W25X_CMD_WRITE_DISABLE};
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     if(writeState==ENABLE) {
         W25X_SendBuffer(enableCmd,sizeof(enableCmd));
     } else {
         W25X_SendBuffer(disableCmd,sizeof(disableCmd));
     }
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 
 }
 void W25X_Read_Status(W25XStatus_t* puiStatus) {
     const uint8_t command[]= {W25X_CMD_READ_STATUS};
 
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     W25X_SendBuffer(command,sizeof(command));
     W25X_ReceiveBuffer(puiStatus,sizeof(W25XStatus_t));
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 }
 void W25X_Write_Status(W25XStatus_t puiStatus) {
     const uint8_t command[]= {W25X_CMD_WRITE_STATUS};
 
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     W25X_SendBuffer(command,sizeof(command));
     W25X_SendBuffer(&puiStatus,sizeof(W25XStatus_t));
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 }
 void W25X_Read_Data(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
     const uint8_t command[]= {W25X_CMD_READ_DATA};
@@ -184,11 +198,11 @@ void W25X_Read_Data(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
     addr[0] = ((uiAddress & 0xFF0000)>>16)&0xFF;
     addr[1] = ((uiAddress & 0x00FF00)>>8) &0xFF;
     addr[2] = ((uiAddress & 0x0000FF)>>0) &0xFF;
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     W25X_SendBuffer(command,sizeof(command));
     W25X_SendBuffer(addr,sizeof(addr));
     W25X_ReceiveBuffer(pBuffer,uiLength);
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 }
 void W25X_Read_Data_Fast(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
     const uint8_t command[]= {W25X_CMD_FAST_READ};
@@ -197,11 +211,11 @@ void W25X_Read_Data_Fast(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
     addr[1] = ((uiAddress & 0x00FF00)>>8) &0xFF;
     addr[2] = ((uiAddress & 0x0000FF)>>0) &0xFF;
     addr[3] = W25X_DUMMY_BYTE;
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     W25X_SendBuffer(command,sizeof(command));
     W25X_SendBuffer(addr,sizeof(addr));
     W25X_ReceiveBuffer(pBuffer,uiLength);
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 }
 void W25X_Write_Page(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
     const uint8_t command[]= {W25X_CMD_PAGE_PROGRAM};
@@ -210,14 +224,14 @@ void W25X_Write_Page(uint32_t uiAddress,void* pBuffer,uint32_t uiLength) {
 
     W25X_Set_WriteState(ENABLE);
 
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     addr[0] = ((uiAddress & 0xFF0000)>>16)&0xFF;
     addr[1] = ((uiAddress & 0x00FF00)>>8) &0xFF;
     addr[2] = ((uiAddress & 0x0000FF)>>0) &0xFF;
     W25X_SendBuffer(command,sizeof(command));
     W25X_SendBuffer(addr,sizeof(addr));
     W25X_SendBuffer(pBuffer,byteToWrite);
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 }
 void W25X_Erase_Block(uint32_t uiAddress) {
     const uint8_t command[]= {W25X_CMD_ERASE_BLOCK};
@@ -231,10 +245,10 @@ void W25X_Erase_Block(uint32_t uiAddress) {
 
     W25X_Set_WriteState(ENABLE);
 
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     W25X_SendBuffer(command,sizeof(command));
     W25X_SendBuffer(addr,sizeof(addr));
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 
 }
 void W25X_Erase_Sector(uint32_t uiAddress) {
@@ -249,10 +263,10 @@ void W25X_Erase_Sector(uint32_t uiAddress) {
 
     W25X_Set_WriteState(ENABLE);
 
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     W25X_SendBuffer(command,sizeof(command));
     W25X_SendBuffer(addr,sizeof(addr));
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 
 
     W25X_Wait_Busy();
@@ -262,17 +276,17 @@ void W25X_Erase_Chip() {
 
     W25X_Set_WriteState(ENABLE);
 
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     W25X_SendBuffer(command,sizeof(command));
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 }
 void W25X_Read_JEDECId(W25XJEDECId_t* pstJEDECId) {
     const uint8_t command[]= {W25X_CMD_READ_JEDEC_ID};
 
-    GPIO_ResetBits(GPIOA,GPIO_Pin_15);
+    W25X_TakeAndEnable();
     W25X_SendBuffer(command,sizeof(command));
     W25X_ReceiveBuffer(pstJEDECId,sizeof(W25XJEDECId_t));
-    GPIO_SetBits(GPIOA,GPIO_Pin_15);
+    W25X_GiveAndDisable();
 
     pstJEDECId->uiFlashId = ((pstJEDECId->uiFlashId>>8)&0x00FF)|((pstJEDECId->uiFlashId<<8)&0xFF00);
 }
