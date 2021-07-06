@@ -12,7 +12,8 @@ HMI_SCREEN_OBJECT* screens[] = {
     &SCREEN_Clock_Edit,
     &SCREEN_Calculator,
     &SCREEN_FlashRom_Init,
-    &SCREEN_FlashRom_Prog
+    &SCREEN_FlashRom_Prog,
+    &SCREEN_TOTPAuth_Show,
 };
 
 void hmiEngineInitialize() {

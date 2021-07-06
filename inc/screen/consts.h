@@ -14,7 +14,8 @@ enum ScreenId {
     SCREEN_Clock_Edit_ID,
     SCREEN_Calculator_ID,
     SCREEN_FlashRom_Init_ID,
-    SCREEN_FlashRom_Prog_ID
+    SCREEN_FlashRom_Prog_ID,
+    SCREEN_TOTPAuth_Show_ID
 };
 
 enum EventId {

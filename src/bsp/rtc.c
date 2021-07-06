@@ -11,6 +11,9 @@ void RTC_Initialize(){
 	/* 允许访问 Backup 区域 */
 	PWR_BackupAccessCmd(ENABLE);
 
+	/* 关闭TAMPER */
+	BKP_TamperPinCmd(DISABLE);
+
 	/* 使能 LSE */
 	RCC_LSEConfig(RCC_LSE_ON);
 

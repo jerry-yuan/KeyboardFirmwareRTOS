@@ -15,6 +15,7 @@
 
 #include <screen/flashrom/initscr.h>
 #include <screen/flashrom/progscr.h>
+#include <screen/totp-authenticator/show.h>
 
 void hmiEngineInitialize();
 

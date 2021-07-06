@@ -18,6 +18,8 @@
 
 /** LCD斜体44px字库 **/
 #define FLASH_ADDR_LCDFONT_44		0x219000
+/** GoogleAuthenticator存储区域 **/
+#define FLASH_ADDR_GA_STORAGE		0x21B000
 
 
 #endif /* FLASHMAP_H_INCLUDED */

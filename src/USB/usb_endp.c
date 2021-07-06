@@ -62,13 +62,9 @@ void EP3_IN_Callback(void){
 }
 void EP3_OUT_Callback(void){
 	uint8_t ep3RxCache[64]={0};
-	uint16_t tempDoubleBytes;
 	uint8_t receivedCount=GetEPRxCount(ENDP3);
 	uint8_t part1Length = MIN(receivedCount,pUSBFIFO->uiSize-pUSBFIFO->uiIn);
 	uint8_t part2Length = receivedCount-part1Length;
-
-	uint8_t part1LengthFloor = part1Length & 0xFE;
-	uint8_t part2LengthFloor = part2Length & 0xFE;
 
 	if(part2Length!=0){
 		NOP_Process();
