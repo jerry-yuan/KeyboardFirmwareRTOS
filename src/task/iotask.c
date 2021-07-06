@@ -31,7 +31,7 @@ static uint8_t rtcSetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse);
 // 0x20
 static uint8_t largeEcho(Buffer_t* pstRequest,Buffer_t* pstResponse);
 
-const RequestHandler_t requestHandlers[256]={
+const static RequestHandler_t requestHandlers[256]={
 			 /*    0x00      0x01			 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0A 0x0B 0x0C 0x0D 0x0E 0x0F*/
 	/* 0x00 */ syncHandler	,sysInfo		,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 	/* 0x10 */ rtcGetCounter,rtcSetCounter	,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
@@ -59,7 +59,7 @@ static uint8_t sysInfo(Buffer_t* pstRequest,Buffer_t* pstResponse){
 	// 获取闪存大小
 	pstInfo->uiFlashSize = *((uint16_t*)0x1FFFF7E0);
 
-	pstResponse->pBuffer = pstInfo;
+	pstResponse->pBuffer = (uint8_t*)pstInfo;
 	pstResponse->uiLength = sizeof(SysInfo_t);
 
 	return R_ACK;
