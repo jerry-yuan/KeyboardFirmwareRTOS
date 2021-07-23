@@ -68,7 +68,7 @@ static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
     return HMI_RET_NORMAL;
 }
 static HMI_ENGINE_RESULT Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) {
-	if(pstParameters != 0xFFFFFFFF){
+	if((uint32_t)pstParameters != 0xFFFFFFFF){
 		HMI_GoBack(NULL);
 		return HMI_RET_NORMAL;
 	}
