@@ -7,6 +7,7 @@
 #include <task/gui.h>
 #include <task/bglight.h>
 #include <task/irqproxy.h>
+#include <lib/keyboard.h>
 #include <stdlib.h>
 #include <math.h>
 static TaskHandle_t hBootstrap;
@@ -21,6 +22,8 @@ static void bootstrap(void) {
     IRQProxyTaskInitialize();
 
 	USB_Initialize();
+
+	KBDLib_Init();
 
     vTaskDelete(hBootstrap);
     //taskEXIT_CRITICAL();
