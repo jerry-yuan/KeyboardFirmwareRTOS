@@ -169,6 +169,7 @@ void USART1_IRQHandler(void) {
         temp = USART1->DR;
         USART_ClearITPendingBit(USART1,USART_IT_IDLE);
         //xSemaphoreGiveFromISR(xTxMutex);
+        (void)temp;
     }
 }
 
