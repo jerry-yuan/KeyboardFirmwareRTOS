@@ -88,12 +88,13 @@ void KBDLib_PressStdKey(KeyboardUsageCode_t keyCode);
 void KBDLib_ReleaseStdKey(KeyboardUsageCode_t keyCode);
 void KBDLib_PressStdKeys(MappedKeyCodes_t* keyCodes);
 void KBDLib_ReleaseStdKeys(MappedKeyCodes_t* keyCodes);
-
+void KBDLib_ReleaseAllStdKeys();
 
 void KBDLib_PressExtKey(KeyboardUsageCode_t keyCode);
 void KBDLib_ReleaseExtKey(KeyboardUsageCode_t keyCode);
 void KBDLib_PressExtKeys(MappedKeyCodes_t* keyCodes);
 void KBDLib_ReleaseExtKeys(MappedKeyCodes_t* keyCodes);
+void KBDLib_ReleaseAllExtKeys();
 
 void KBDLib_SyncState();
 

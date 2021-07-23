@@ -90,7 +90,7 @@ void KBDLib_ReleaseStdKeys(MappedKeyCodes_t* pstKeyCodes){
     }
 }
 void KBDLib_ReleaseAllStdKeys(){
-    uint8_t* pCharOfReport = &pstContext->standardKeyboardReport;
+    uint8_t* pCharOfReport = (uint8_t*)&pstContext->standardKeyboardReport;
     for(uint8_t i=0;i<sizeof(StandardKeyboardReport_t);i++){
         if(pCharOfReport[i]){
             memset(&pstContext->standardKeyboardReport,0,sizeof(StandardKeyboardReport_t));
@@ -127,12 +127,14 @@ void KBDLib_ReleaseAllExtKeys(){
 void KBDLib_SyncState(){
     // 标准键盘更新了
     if(pstContext->syncFlags & SYNC_FLAG_STDKBD){
+        while(GetEPTxStatus(ENDP1) != EP_TX_NAK);
         UserToPMABufferCopy((uint8_t*)&pstContext->standardKeyboardReport,GetEPTxAddr(ENDP1),sizeof(StandardKeyboardReport_t));
         SetEPTxValid(ENDP1);
         pstContext->syncFlags ^= SYNC_FLAG_STDKBD;
     }
     // 消费键盘更新了
     if(pstContext->syncFlags & SYNC_FLAG_EXTKBD){
+        while(GetEPTxStatus(ENDP2) != EP_TX_NAK);
         UserToPMABufferCopy((uint8_t*)&pstContext->consumerKeyboardReport,GetEPTxAddr(ENDP2),sizeof(ConsumerKeyboardReport_t));
         SetEPTxValid(ENDP2);
         pstContext->syncFlags ^= SYNC_FLAG_EXTKBD;
@@ -180,19 +182,13 @@ bool containsKeys(MappedKeyCodes_t* mappedKeyCodes,KeyboardUsageCode_t* pKeyCode
 }
 
 void sendKeysToHost(uint8_t* pKeys,uint8_t uiLength){
-	//StandardKeyboardReport_t backupReport=*standardKeyboardReport;
-	//memset(standardKeyboardReport,0,sizeof(StandardKeyboardReport_t));
-	//JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
-	//Delay_ms(10);
-	//for(uint8_t i=0;i<uiLength;i++){
-	//	standardKeyboardReport->keys[0] = pKeys[i];
-	//	JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
-	//	Delay_ms(10);
-	//	standardKeyboardReport->keys[0] = 0;
-	//	JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
-	//	Delay_ms(10);
-	//}
-	////*standardKeyboardReport=backupReport;
-	//JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
-	//Delay_ms(10);
+    KBDLib_ReleaseAllStdKeys();
+    KBDLib_SyncState();
+    while(uiLength-->0){
+        KBDLib_PressStdKey(*pKeys);
+        KBDLib_SyncState();
+        KBDLib_ReleaseStdKey(*pKeys);
+        KBDLib_SyncState();
+        pKeys++;
+    }
 }
