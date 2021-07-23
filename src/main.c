@@ -8,6 +8,7 @@
 #include <task/bglight.h>
 #include <task/irqproxy.h>
 #include <task/iotask.h>
+#include <lib/keyboard.h>
 #include <stdlib.h>
 #include <math.h>
 static TaskHandle_t hBootstrap;
@@ -24,6 +25,7 @@ static void bootstrap(void) {
 	USB_Initialize();
 
 	IOTaskInitialize();
+	KBDLib_Init();
 
     vTaskDelete(hBootstrap);
     //taskEXIT_CRITICAL();

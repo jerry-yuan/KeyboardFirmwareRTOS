@@ -158,21 +158,6 @@ void USB_Cable_Config (FunctionalState NewState) {
     else
         printf("usb pull up disable\r\n");*/
 }
-/*******************************************************************************
-* Function Name : JKBD_Send.
-* Description   : 准备包含JoyStick事件数据的缓冲区(prepares buffer to be sent containing Joystick event infos.)
-* Input         : buf: 缓冲区地址
-                  len: 缓冲区长度
-* Output        : None.
-* Return value  : None.
-*******************************************************************************/
-void JKBD_Send(uint8_t* buf,uint8_t len,uint8_t endpoint) {
-	while(GetEPTxStatus(endpoint) != EP_TX_NAK);
-    /*copy mouse position info in ENDP1 Tx Packet Memory Area*/
-    UserToPMABufferCopy(buf, GetEPTxAddr(endpoint), len);   //
-    /* enable endpoint for transmission */
-    SetEPTxValid(endpoint);
-}
 
 //USB使能连接/断线   enable:0,断开;1,允许连接
 void USB_Port_Set(u8 enable) {

@@ -16,6 +16,9 @@
 
 #define CKEY        0x0100
 
+#define SYNC_FLAG_STDKBD    0x01<<0
+#define SYNC_FLAG_EXTKBD    0x01<<1
+
 typedef enum {
     KeyEmpty=0x00,
     KeyErrorRollOver,KeyPOSTFail,KeyErrorUndefined,
@@ -52,7 +55,9 @@ typedef enum {
     KeyNumColon,KeyNumHash,KeyNumSpace,KeyNumAt,KeyNumExclamationMark,
     KeyNumMemoryStore,KeyNumMemoryReset,KeyNumMemoryAdd,KeyNumMemorySubtract,KeyNumMemoryMultiply,KeyNumMemoryDivide,
     KeyNumNegativeSwitch,KeyNumClear,KeyNumClearEntry,
-    KeyNumBinary,KeyNumOctal,KeyNumDecimal,KeyNumHexadecimal
+    KeyNumBinary,KeyNumOctal,KeyNumDecimal,KeyNumHexadecimal,
+    KeyLeftCtrl=0xE0,KeyLeftShift,KeyLeftAlt,KeyLeftGUI,
+    KeyRightCtrl,KeyRightShift,KeyRightAlt,KeyRightGUI
 } KeyboardUsageCode_t;
 
 typedef struct {
@@ -60,7 +65,7 @@ typedef struct {
     uint8_t   cursor;
     uint32_t* keyCodes;
 } MappedKeyCodes_t;
-
+// HID 报文
 typedef struct {
     uint8_t controlKeys;
     uint8_t reserved;
@@ -68,6 +73,30 @@ typedef struct {
 } StandardKeyboardReport_t;
 
 typedef uint8_t ConsumerKeyboardReport_t;
+// HID虚拟设备状态
+typedef struct{
+    uint8_t syncFlags;
+    // Standard Keyboard
+    StandardKeyboardReport_t standardKeyboardReport;
+    // Consumer Keyboard
+    ConsumerKeyboardReport_t consumerKeyboardReport;
+} HidContext_t;
+
+void KBDLib_Init();
+
+void KBDLib_PressStdKey(KeyboardUsageCode_t keyCode);
+void KBDLib_ReleaseStdKey(KeyboardUsageCode_t keyCode);
+void KBDLib_PressStdKeys(MappedKeyCodes_t* keyCodes);
+void KBDLib_ReleaseStdKeys(MappedKeyCodes_t* keyCodes);
+void KBDLib_ReleaseAllStdKeys();
+
+void KBDLib_PressExtKey(KeyboardUsageCode_t keyCode);
+void KBDLib_ReleaseExtKey(KeyboardUsageCode_t keyCode);
+void KBDLib_PressExtKeys(MappedKeyCodes_t* keyCodes);
+void KBDLib_ReleaseExtKeys(MappedKeyCodes_t* keyCodes);
+void KBDLib_ReleaseAllExtKeys();
+
+void KBDLib_SyncState();
 
 void mapKeyCodes(KeyUpdateInfo_t* pCurrent,uint32_t* pKeyCode);
 bool containsKey(MappedKeyCodes_t* mappedKeyCodes,KeyboardUsageCode_t keyCode);

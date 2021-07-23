@@ -46,14 +46,7 @@ __IO uint32_t keyboardStatus=0x00;
 
 static KeyboardStateMachine_t* stateMachine=NULL;
 
-StandardKeyboardReport_t*    standardKeyboardReport;
-ConsumerKeyboardReport_t*    consumerKeyboardReport;
-
 static HMI_ENGINE_RESULT Initialize(SGUI_SCR_DEV* pstDeviceIF) {
-    standardKeyboardReport = (StandardKeyboardReport_t*)pvPortMalloc(sizeof(StandardKeyboardReport_t));
-    consumerKeyboardReport = (ConsumerKeyboardReport_t*)pvPortMalloc(sizeof(ConsumerKeyboardReport_t));
-    memset(standardKeyboardReport,0,sizeof(StandardKeyboardReport_t));
-    memset(consumerKeyboardReport,0,sizeof(ConsumerKeyboardReport_t));
 
     stateMachine = (KeyboardStateMachine_t*)pvPortMalloc(sizeof(KeyboardStateMachine_t));
     stateMachine->currentState = StandardKeyboardWorking;
@@ -94,7 +87,12 @@ static HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_
 		stRelease.keyCodes	= pvPortMalloc(sizeof(uint32_t)*stRelease.length);
 		mapKeyCodes(pstKeyEvent->Data.pstRelease,stRelease.keyCodes);
 
-        stateMachine->transferHandler[stateMachine->currentState](&stPressed,&stRelease,piActionID);
+        while(stPressed.cursor<stPressed.length || stRelease.cursor<stRelease.length ){
+            stateMachine->transferHandler[stateMachine->currentState](&stPressed,&stRelease,piActionID);
+            if(*piActionID!=NoAction){
+                break;
+            }
+        }
 
         vPortFree(stPressed.keyCodes);
         vPortFree(stRelease.keyCodes);
@@ -123,82 +121,22 @@ static HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESU
     if(iActionID & ACTION_MASK_DISABLE_TIM){
         TIM_ScreenSaver_Disable();
     }
-
+    KBDLib_SyncState();
     return HMI_RET_NORMAL;
-}
-
-
-static void insertToStandardKeyboardReport(uint16_t keyCode,StandardKeyboardReport_t* keyboardReport) {
-    uint8_t keyValue=keyCode&0xFF;
-    if(keyCode&0x0100) {
-        // 控制键
-        keyboardReport->controlKeys |= keyValue;
-    } else {
-        // 普通键
-        uint8_t keyIndex=0;
-        // 找到第一个空位
-        while(keyIndex<6 && keyboardReport->keys[keyIndex]!=0x00 )
-            keyIndex++;
-        if(keyIndex<6) {
-            // 找到了第一个0位 ==> 写入位置
-            keyboardReport->keys[keyIndex]=keyCode;
-        } else {
-            // 6键全满         ==> 跳过响应此键
-        }
-    }
-}
-static void removeFromStandardKeyboardReport(uint16_t keyCode,StandardKeyboardReport_t* keyboardReport) {
-    uint8_t keyValue=keyCode&0xFF;
-    if(keyCode&0x0100) {
-        // 控制键
-        keyboardReport->controlKeys ^= keyValue;
-    } else {
-        // 普通键
-        uint8_t keyIndex=0;
-        // 找到那个与弹起的键相同的键
-        while(keyIndex<6&& keyboardReport->keys[keyIndex]!=keyCode) keyIndex++;
-        if(keyIndex<6) {
-            // 找到一个相同
-            // 寻找到最后一个有效键
-            uint8_t lastKeyIndex=5;
-            while(lastKeyIndex>keyIndex && keyboardReport->keys[lastKeyIndex]==0x00) lastKeyIndex--;
-            if(lastKeyIndex!=keyIndex) {
-                // 二者不等则交换位置
-                keyboardReport->keys[keyIndex]     ^= keyboardReport->keys[lastKeyIndex];
-                keyboardReport->keys[lastKeyIndex] ^= keyboardReport->keys[keyIndex];
-                keyboardReport->keys[keyIndex]     ^= keyboardReport->keys[lastKeyIndex];
-                // 更新指向将被删除元素的游标
-                keyIndex=lastKeyIndex;
-            }
-            // 删除弹起的按键
-            keyboardReport->keys[keyIndex]=0x00;
-        } else {
-            // 没找到意味着当时是直接忽略掉的键
-        }
-    }
 }
 
 
 void standardKeyboardTransferHandler(MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
     if(pstPressed->length>0 && pstPressed->keyCodes[0] & KEY_Fn_BIT_MASK) {
-        // 发现是Fn键
+        // 发现是Fn键 => 切换至扩展键盘预备状态
         stateMachine->currentState=ConsumerKeyboardStandby;
-        if(pstPressed->length>1) {
-            pstPressed->cursor++;
-            consumerKeyboardStandbyTransferHandler(pstPressed,pstRelease,piActionID);
-        }
-        memset(standardKeyboardReport,0,sizeof(StandardKeyboardReport_t));
+        pstPressed->cursor++;
+        KBDLib_ReleaseAllStdKeys();
     } else {
-        while(pstPressed->cursor<pstPressed->length) {
-            insertToStandardKeyboardReport(pstPressed->keyCodes[pstPressed->cursor],standardKeyboardReport);
-            pstPressed->cursor++;
-        }
-        while(pstRelease->cursor<pstRelease->length) {
-            removeFromStandardKeyboardReport(pstRelease->keyCodes[pstRelease->cursor],standardKeyboardReport);
-            pstRelease->cursor++;
-        }
+        KBDLib_PressStdKeys(pstPressed);
+        KBDLib_ReleaseStdKeys(pstRelease);
     }
-    JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
+    //JKBD_Send((uint8_t*)standardKeyboardReport,sizeof(StandardKeyboardReport_t),ENDP1);
 }
 void consumerKeyboardStandbyTransferHandler (MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
     if(pstRelease->length>0 && (pstRelease->keyCodes[0]&KEY_Fn_BIT_MASK)) {
@@ -208,10 +146,8 @@ void consumerKeyboardStandbyTransferHandler (MappedKeyCodes_t* pstPressed,Mapped
         }else{
             *piActionID = TurnOnScreen;
         }
-
     } else {
         stateMachine->currentState=ConsumerKeyboardWorking;
-        consumerKeyboardWorkingTransferHandler(pstPressed,pstRelease,piActionID);
     }
 }
 void consumerKeyboardWorkingTransferHandler (MappedKeyCodes_t* pstPressed,MappedKeyCodes_t* pstRelease,SGUI_INT* piActionID) {
@@ -219,15 +155,8 @@ void consumerKeyboardWorkingTransferHandler (MappedKeyCodes_t* pstPressed,Mapped
         stateMachine->currentState=StandardKeyboardWorking;
         standardKeyboardTransferHandler(pstPressed,pstRelease,piActionID);
     } else {
-        while(pstPressed->cursor < pstPressed->length) {
-            *consumerKeyboardReport |= (uint8_t)(((pstPressed->keyCodes[pstPressed->cursor])&0xFF0000)>>16);
-            pstPressed->cursor++;
-        }
-
-        while(pstRelease->cursor < pstRelease->length) {
-            *consumerKeyboardReport ^= (uint8_t)(((pstRelease->keyCodes[pstRelease->cursor])&0xFF0000)>>16);
-            pstRelease->cursor++;
-        }
-        JKBD_Send((uint8_t*)consumerKeyboardReport,sizeof(ConsumerKeyboardReport_t),ENDP2);
+        KBDLib_PressExtKeys(pstPressed);
+        KBDLib_ReleaseExtKeys(pstRelease);
+        //JKBD_Send((uint8_t*)consumerKeyboardReport,sizeof(ConsumerKeyboardReport_t),ENDP2);
     }
 }

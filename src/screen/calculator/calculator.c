@@ -53,6 +53,7 @@ typedef struct {
 enum {
     NoAction      = 0x00,
     GoBack        = 0x01,
+    PushToHost    = 0x02,
     RefreshScreen = 0x80,
     ResetCalc	  = 0x81
 };
@@ -158,6 +159,8 @@ HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* p
             *piActionID = ResetCalc;
         } else if(containsKey(&stRelease,KeyEscape)) {
             *piActionID = GoBack;
+        } else if(containsKey(&stRelease,KeyInsert)){
+            *piActionID = PushToHost;
         } else {
             pstContext -> pfActionHandlers[pstContext->eState](&stPressed,&stRelease,piActionID);
         }
@@ -175,6 +178,18 @@ HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT ePro
         HMI_GoBack(NULL);
     } else if(iActionID == ResetCalc) {
         resetCalculator();
+    } else if(iActionID == PushToHost) {
+        uint8_t i;
+        uint8_t pcBuffer[DISPLAY_BUFFER_SIZE] = {0};
+        numberToStr((char*)pcBuffer,&pstContext->stPrevNumber);
+        for(i=0;i<DISPLAY_BUFFER_SIZE && pcBuffer[i]!='\0';i++){
+            if(pcBuffer[i]>='0' && pcBuffer[i]<='9'){
+                pcBuffer[i] = (pcBuffer[i]-'0'+9)%10 + Key1;
+            }else{
+                pcBuffer[i] = KeyDot;
+            }
+        }
+        sendKeysToHost(pcBuffer,i);
     }
     if(iActionID & ACTION_MASK_REFRESH) {
         Refresh(pstDeviceIF,NULL);
