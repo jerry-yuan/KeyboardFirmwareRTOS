@@ -1,92 +1,27 @@
 #include <task/iotask.h>
 #include <task/priorities.h>
 #include <lib/utils.h>
+#include <iohandlers/sysinfo.h>
+#include <iohandlers/rtc.h>
+#include <iohandlers/w25x.h>
 #include <USB/usb.h>
 #include <usb_mem.h>
 #include <usb_regs.h>
 #include <usb_conf.h>
-#include <string.h>
 
-#define R_ACK  0x55
-#define R_NAK  0xAA
-
-typedef struct{
-	uint8_t* pBuffer;
-	uint16_t uiLength;
-} Buffer_t;
-typedef struct{
-	uint32_t uiDeviceId;
-	uint32_t uiRevisionId;
-	uint8_t  uiSerial[12];
-	uint16_t  uiFlashSize;
-} SysInfo_t;
-
-typedef uint8_t (*RequestHandler_t)(Buffer_t* pstRequest,Buffer_t* pstResponse);
 // 0x00     系统基本函数
-static uint8_t syncHandler(Buffer_t* pstRequest,Buffer_t* pstResponse);
-static uint8_t sysInfo(Buffer_t* pstRequest,Buffer_t* pstResponse);
-// 0x10     RTC相关
-static uint8_t rtcGetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse);
-static uint8_t rtcSetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse);
-// 0x20     W25X Flash相关
-static uint8_t largeEcho(Buffer_t* pstRequest,Buffer_t* pstResponse);
 
-const static RequestHandler_t requestHandlers[256]={
-			 /*    0x00      0x01			 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0A 0x0B 0x0C 0x0D 0x0E 0x0F*/
-	/* 0x00 */ syncHandler	,sysInfo		,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-	/* 0x10 */ rtcGetCounter,rtcSetCounter	,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-	/* 0x20 */ largeEcho,
+const RequestHandler_t requestHandlers[256]={
+			 /*0x00              0x01			     0x02            0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0A 0x0B 0x0C 0x0D 0x0E 0x0F*/
+	/* 0x00 */ IOH_syncHandler	,IOH_sysInfo		,IOH_largeEcho  ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+	/* 0x10 */ IOH_rtcGetCounter,IOH_rtcSetCounter	,NULL           ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+	/* 0x20 */ IOH_w25xRead     ,IOH_w25xWrite      ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 	NULL
 };
 
 TaskHandle_t hIOTask;
 extern SemaphoreHandle_t hEP3TxWait;
-static uint8_t syncHandler(Buffer_t* pstRequest,Buffer_t* pstResponse){
-	const uint8_t syncResp[]={R_ACK,R_NAK,R_ACK,R_NAK};
-	pstResponse->pBuffer=pvPortMalloc(sizeof(syncResp));
-	memcpy(pstResponse->pBuffer,syncResp,sizeof(syncResp));
-	pstResponse->uiLength = sizeof(syncResp);
-	return R_ACK;
-}
-static uint8_t sysInfo(Buffer_t* pstRequest,Buffer_t* pstResponse){
-	SysInfo_t* pstInfo=pvPortMalloc(sizeof(SysInfo_t));
-	// 获取DevId
-	pstInfo->uiDeviceId = DBGMCU_GetDEVID();
-	// 获取RevId
-	pstInfo->uiRevisionId = DBGMCU_GetREVID();
-	// 获取96位序列号
-	memcpy(&pstInfo->uiSerial,(uint8_t*)0x1FFFF7E8,12);
-	// 获取闪存大小
-	pstInfo->uiFlashSize = *((uint16_t*)0x1FFFF7E0);
 
-	pstResponse->pBuffer = (uint8_t*)pstInfo;
-	pstResponse->uiLength = sizeof(SysInfo_t);
-
-	return R_ACK;
-}
-static uint8_t rtcGetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse){
-	pstResponse->pBuffer=pvPortMalloc(sizeof(uint32_t));
-	*((uint32_t*)pstResponse->pBuffer) = RTC_GetCounter();
-	pstResponse->uiLength = sizeof(uint32_t);
-	return R_ACK;
-}
-static uint8_t rtcSetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse){
-	uint32_t* pTimestamp=(uint32_t*)pstRequest->pBuffer;
-	RTC_SetCounter(*pTimestamp);
-	return R_ACK;
-}
-static uint8_t largeEcho(Buffer_t* pstRequest,Buffer_t* pstResponse){
-	pstResponse->pBuffer=pstRequest->pBuffer;
-	pstResponse->uiLength=pstRequest->uiLength;
-
-	//dumpMemory(pstRequest->pBuffer,pstRequest->uiLength);
-	printf("recv:%d\r\n",pstResponse->uiLength);
-
-	pstRequest->pBuffer = NULL;
-	pstRequest->uiLength = 0;
-
-	return R_ACK;
-}
 static void safeSend(uint8_t uiStatusCode,uint8_t* pBuffer,uint16_t uiLength){
 	uint8_t uiPackageSize=0;
 	uint8_t uiDataLength=0;
