@@ -202,13 +202,18 @@ HMI_ENGINE_RESULT Refresh(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters) 
 }
 HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID) {
     KEY_EVENT* pstKeyEvent;
-    MappedKeyCodes_t stRelease;
+    MappedKeyCodes_t stRelease,stPressed;
     KeyboardUsageCode_t uiKeyCode;
     *piActionID = NoAction;
     if(pstEvent->iID == RTC_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,RTC_EVENT)) {
         *piActionID = RefreshScreen;
     } else if(pstEvent->iID == KEY_EVENT_ID && HMI_PEVENT_SIZE_CHK(pstEvent,KEY_EVENT)) {
         pstKeyEvent = (KEY_EVENT*)pstEvent;
+
+        stPressed.cursor    = 0;
+        stPressed.length    = pstKeyEvent->Data.uiPressedCount;
+        stPressed.keyCodes  = pvPortMalloc(sizeof(uint32_t)*pstKeyEvent->Data.uiPressedCount);
+        mapKeyCodes(pstKeyEvent->Data.pstPressed,stPressed.keyCodes);
 
         stRelease.cursor	= 0;
         stRelease.length	= pstKeyEvent->Data.uiReleaseCount;
@@ -230,9 +235,12 @@ HMI_ENGINE_RESULT ProcessEvent(SGUI_SCR_DEV* pstDeviceIF,const HMI_EVENT_BASE* p
         	}
         	sendKeysToHost(pKeys,6);
         	vPortFree(pKeys);
+        } else if(containsKeys(&stPressed,&uiKeyCode,3,KeyDelete,KeyEnter,KeyDeleteForward)){
+            KBDLib_PressStdKeys(&stPressed);
         } else if(containsKeys(&stRelease,&uiKeyCode,3,KeyDelete,KeyEnter,KeyDeleteForward)){
-        	sendKeysToHost(&uiKeyCode,1);
+        	KBDLib_ReleaseStdKeys(&stRelease);
         }
+        vPortFree(stPressed.keyCodes);
         vPortFree(stRelease.keyCodes);
     }
     return HMI_RET_NORMAL;
@@ -249,6 +257,7 @@ HMI_ENGINE_RESULT PostProcess(SGUI_SCR_DEV* pstDeviceIF,  HMI_ENGINE_RESULT ePro
     if(iActionID & 0x80) {
         Refresh(pstDeviceIF,NULL);
     }
+    KBDLib_SyncState();
     return HMI_RET_NORMAL;
 }
 

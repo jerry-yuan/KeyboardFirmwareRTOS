@@ -20,15 +20,15 @@ typedef struct{
 	uint8_t  uiSerial[12];
 	uint16_t  uiFlashSize;
 } SysInfo_t;
-//typedef SGUI_DEVPF_IF_DEFINE(R, FN, PARAM)
+
 typedef uint8_t (*RequestHandler_t)(Buffer_t* pstRequest,Buffer_t* pstResponse);
-// 0x00
+// 0x00     系统基本函数
 static uint8_t syncHandler(Buffer_t* pstRequest,Buffer_t* pstResponse);
 static uint8_t sysInfo(Buffer_t* pstRequest,Buffer_t* pstResponse);
-// 0x10
+// 0x10     RTC相关
 static uint8_t rtcGetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse);
 static uint8_t rtcSetCounter(Buffer_t* pstRequest,Buffer_t* pstResponse);
-// 0x20
+// 0x20     W25X Flash相关
 static uint8_t largeEcho(Buffer_t* pstRequest,Buffer_t* pstResponse);
 
 const static RequestHandler_t requestHandlers[256]={
