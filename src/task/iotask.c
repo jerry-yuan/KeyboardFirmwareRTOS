@@ -15,7 +15,7 @@ const RequestHandler_t requestHandlers[256]={
 			 /*0x00              0x01			     0x02            0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0A 0x0B 0x0C 0x0D 0x0E 0x0F*/
 	/* 0x00 */ IOH_syncHandler	,IOH_sysInfo		,IOH_largeEcho  ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 	/* 0x10 */ IOH_rtcGetCounter,IOH_rtcSetCounter	,NULL           ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-	/* 0x20 */ IOH_w25xRead     ,IOH_w25xWrite      ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+	/* 0x20 */ IOH_w25xInfo     ,IOH_w25xRead       ,IOH_w25xWrite  ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 	NULL
 };
 
